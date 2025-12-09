@@ -142,7 +142,7 @@ void GBufferRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     ResourceViewInfo rasterViews[5] = { m_RasterViews[0]->GetResourceView(),
                                         m_RasterViews[1]->GetResourceView(),
                                         m_RasterViews[2]->GetResourceView(),
-                                        m_RasterViews[3]->GetResourceView(),
+                                        (m_GenerateMotionVectors ? m_RasterViews[3]->GetResourceView() : ResourceViewInfo{}),
                                         m_RasterViews[4]->GetResourceView() };
     ClearRenderTarget(pCmdList, &rasterViews[0], clearColor);
     ClearRenderTarget(pCmdList, &rasterViews[1], clearColor);
@@ -479,21 +479,21 @@ uint32_t GBufferRenderModule::GetPipelinePermutationID(const Surface* pSurface) 
 
     if (m_GenerateMotionVectors)
     {
-        defineList.insert(std::make_pair(L"HAS_MOTION_VECTORS",    L"1"));
-        defineList.insert(std::make_pair(L"HAS_MOTION_VECTORS_RT", L"3"));
+        defineList.emplace(L"HAS_MOTION_VECTORS",    L"1");
+        defineList.emplace(L"HAS_MOTION_VECTORS_RT", L"3");
     }
 
     if (pMaterial->HasPBRInfo())
     {
         if (pMaterial->HasPBRMetalRough())
         {
-            defineList.insert(std::make_pair(L"MATERIAL_METALLICROUGHNESS", L""));
+            defineList.emplace(L"MATERIAL_METALLICROUGHNESS", L"");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Albedo, L"ID_albedoTexture", L"ID_albedoTexCoord");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::MetalRough, L"ID_metallicRoughnessTexture", L"ID_metallicRoughnessTexCoord");
         }
         else if (pMaterial->HasPBRSpecGloss())
         {
-            defineList.insert(std::make_pair(L"MATERIAL_SPECULARGLOSSINESS", L""));
+            defineList.emplace(L"MATERIAL_SPECULARGLOSSINESS", L"");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Albedo, L"ID_albedoTexture", L"ID_albedoTexCoord");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::SpecGloss, L"ID_specularGlossinessTexture", L"ID_specularGlossinessTexCoord");
         }
@@ -503,10 +503,10 @@ uint32_t GBufferRenderModule::GetPipelinePermutationID(const Surface* pSurface) 
     AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Occlusion, L"ID_occlusionTexture", L"ID_occlusionTexCoord");
 
     if (pMaterial->HasDoubleSided())
-        defineList.insert(std::make_pair(L"ID_doublesided", L""));
+        defineList.emplace(L"ID_doublesided", L"");
 
     if (pMaterial->GetBlendMode() == MaterialBlend::Mask)
-        defineList.insert(std::make_pair(L"ID_alphaMask", L""));
+        defineList.emplace(L"ID_alphaMask", L"");
 
     // Get the defines for attributes that make up the surface vertices
     Surface::GetVertexAttributeDefines(usedAttributes, defineList);
@@ -555,7 +555,7 @@ uint32_t GBufferRenderModule::GetPipelinePermutationID(const Surface* pSurface) 
     {
         // Check if the attribute is present
         if (usedAttributes & (0x1 << attribute))
-            vertexAttributes.push_back(InputLayoutDesc(static_cast<VertexAttributeType>(attribute), pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).ResourceDataFormat, (uint32_t)vertexAttributes.size(), 0));
+            vertexAttributes.emplace_back(static_cast<VertexAttributeType>(attribute), pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).ResourceDataFormat, (uint32_t)vertexAttributes.size(), 0);
     }
     psoDesc.AddInputLayout(vertexAttributes);
 

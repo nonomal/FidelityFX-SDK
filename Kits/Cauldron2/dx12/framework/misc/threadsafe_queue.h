@@ -77,8 +77,7 @@ namespace cauldron
     };
 
     template<typename T>
-    ThreadSafeQueue<T>::ThreadSafeQueue()
-    {}
+    ThreadSafeQueue<T>::ThreadSafeQueue() = default;
 
     template<typename T>
     ThreadSafeQueue<T>::ThreadSafeQueue(const ThreadSafeQueue<T>& copy)

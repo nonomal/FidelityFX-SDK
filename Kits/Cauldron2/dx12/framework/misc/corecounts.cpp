@@ -25,7 +25,7 @@
 
 #if _WINDOWS
     // ACS only works on windows
-    #include "../libs/acs/amd_acs.h"
+    #include "../../../../OpenSource/amd/acs/amd_acs.h"
     #include <intrin.h>
 #else
     #include <thread>

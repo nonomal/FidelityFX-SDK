@@ -159,7 +159,7 @@ namespace cauldron
         template<typename T>
         static void RegisterModule(std::string const& renderModuleName)
         {
-            m_ConstructionMap.insert(std::make_pair(renderModuleName, &Create<T>));
+            m_ConstructionMap.emplace(renderModuleName, &Create<T>);
         }
 
     protected:

@@ -1,7 +1,7 @@
 // This file is part of the FidelityFX SDK.
 //
 // Copyright (C) 2025 Advanced Micro Devices, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -34,9 +34,9 @@ namespace cauldron
         if (invertedDepth)
         {
             math::Matrix4 perspMatrix;
-            const float cotHalfFovY = cosf(0.5f * fovyRadians) / sinf(0.5f * fovyRadians);
-            const float m00 = cotHalfFovY / aspect;
-            const float m11 = cotHalfFovY;
+            const float   cotHalfFovY = cosf(0.5f * fovyRadians) / sinf(0.5f * fovyRadians);
+            const float   m00 = cotHalfFovY / aspect;
+            const float   m11 = cotHalfFovY;
 
             math::Vector4 c0(m00, 0.f, 0.f, 0.f);
             math::Vector4 c1(0.f, m11, 0.f, 0.f);
@@ -48,6 +48,7 @@ namespace cauldron
             perspMatrix.setCol2(c2);
             perspMatrix.setCol3(c3);
 
+            // Infinite, inverted depth. maps zFar (+inf) to depth 0 and zNear (>0) to depth 1 after perspective divide
             return perspMatrix;
         }
         else
@@ -65,4 +66,4 @@ namespace cauldron
             return math::Matrix4::orthographic(left, right, bottom, top, 2.0f * zNear - zFar, zFar);
     }
 
-} // namespace cauldron
+}  // namespace cauldron

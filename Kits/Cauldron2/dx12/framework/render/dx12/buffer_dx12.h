@@ -73,7 +73,7 @@ namespace cauldron
 
         virtual void Recreate() override;
 
-        virtual void InitAddressInfo();
+        void InitAddressInfo();
     };
 
 } // namespace cauldron

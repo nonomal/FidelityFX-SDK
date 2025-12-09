@@ -77,7 +77,7 @@
 #define FFX_API __declspec(dllexport)
 #endif // #if defined (FFX_GCC)
 
-#define FFX_SDK_DEFAULT_CONTEXT_SIZE (1024 * 128)
+#define FFX_SDK_DEFAULT_CONTEXT_SIZE (1024 * 177)
 
 /// Maximum supported number of simultaneously bound SRVs.
 ///
@@ -87,7 +87,7 @@
 /// Maximum supported number of simultaneously bound UAVs.
 ///
 /// @ingroup Defines
-#define FFX_MAX_NUM_UAVS            64
+#define FFX_MAX_NUM_UAVS            113
 
 /// Maximum number of constant buffers bound.
 ///
@@ -303,6 +303,7 @@ typedef enum FfxApiSurfaceFormat {
     FFX_API_SURFACE_FORMAT_R16_UNORM,                   ///< 16 bit per channel, 1 channel unsigned normalized format
     FFX_API_SURFACE_FORMAT_R16_SNORM,                   ///< 16 bit per channel, 1 channel signed normalized format
     FFX_API_SURFACE_FORMAT_R8_UNORM,                    ///<  8 bit per channel, 1 channel unsigned normalized format
+    FFX_API_SURFACE_FORMAT_R8_SNORM,                    ///<  8 bit per channel, 1 channel signed normalized format
     FFX_API_SURFACE_FORMAT_R8G8_UNORM,                  ///<  8 bit per channel, 2 channel unsigned normalized format
     FFX_API_SURFACE_FORMAT_R8G8_UINT,                   ///<  8 bit per channel, 2 channel unsigned integer format
     FFX_API_SURFACE_FORMAT_R32_FLOAT,                   ///< 32 bit per channel, 1 channel float format
@@ -504,15 +505,6 @@ typedef enum FfxBarrierType
     FFX_BARRIER_TYPE_TRANSITION = 0,
     FFX_BARRIER_TYPE_UAV,
 } FfxBarrierType;
-
-/// An enumeration for message types that can be passed
-///
-/// @ingroup SDKTypes
-typedef enum FfxMsgType {
-    FFX_MESSAGE_TYPE_ERROR      = 0,
-    FFX_MESSAGE_TYPE_WARNING    = 1,
-    FFX_MESSAGE_TYPE_COUNT
-} FfxMsgType;
 
 /// An enumeration of all the effects which constitute the FidelityFX SDK.
 ///

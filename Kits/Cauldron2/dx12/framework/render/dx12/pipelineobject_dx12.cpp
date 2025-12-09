@@ -32,16 +32,23 @@
 
 namespace cauldron
 {
-    PipelineObject* PipelineObject::CreatePipelineObject(const wchar_t*      pipelineObjectName,
-                                                         const PipelineDesc& Desc,
+    PipelineObject* PipelineObject::CreatePipelineObject(const wchar_t*               pipelineObjectName,
+                                                         PipelineDesc&&               desc,
                                                          std::vector<const wchar_t*>* pAdditionalParameters/*=nullptr*/)
     {
         PipelineObjectInternal* pNewPipeline = new PipelineObjectInternal(pipelineObjectName);
 
         // Build in one step before returning
-        pNewPipeline->Build(Desc, pAdditionalParameters);
+        pNewPipeline->Build(std::move(desc), pAdditionalParameters);
 
         return pNewPipeline;
+    }
+
+    PipelineObject* PipelineObject::CreatePipelineObject(const wchar_t*               pipelineObjectName,
+                                                         PipelineDesc&                desc,
+                                                         std::vector<const wchar_t*>* pAdditionalParameters/*=nullptr*/)
+    {
+        return CreatePipelineObject(pipelineObjectName, std::move(desc), pAdditionalParameters);
     }
 
     PipelineObjectInternal::PipelineObjectInternal(const wchar_t* pipelineObjectName) :
@@ -50,10 +57,10 @@ namespace cauldron
     }
 
     // Most of the setup is in the desc class, so we just need to build the right type
-    void PipelineObjectInternal::Build(const PipelineDesc& desc, std::vector<const wchar_t*>* pAdditionalParameters)
+    void PipelineObjectInternal::Build(PipelineDesc&& desc, std::vector<const wchar_t*>* pAdditionalParameters)
     {
         m_Desc = std::move(desc);
-        m_Type = desc.GetPipelineType();
+        m_Type = m_Desc.GetPipelineType();
 
         // Start by doing all shader builds
         m_Desc.AddShaders(pAdditionalParameters);

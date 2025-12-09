@@ -53,7 +53,7 @@ namespace cauldron
         std::vector<ComponentData*>     ComponentsData = {};        ///< Initialization data for all of the entity's components
         std::vector<Component*>         Components = {};            ///< Pointers for all of the entity's components
 
-        EntityDataBlock() {}
+        EntityDataBlock() = default;
         ~EntityDataBlock()
         {
             // Delete entity (backed by component)
@@ -104,7 +104,7 @@ namespace cauldron
         /**
          * @brief   Construction.
          */
-        ContentBlock() {}
+        ContentBlock() = default;
 
         /**
          * @brief   Destruction.

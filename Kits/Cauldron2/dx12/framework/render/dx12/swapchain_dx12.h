@@ -81,7 +81,7 @@ namespace cauldron
 
         virtual void CreateSwapChainRenderTargets() override;
 
-        bool IntersectWindowAndOutput(const RECT& windowRect, const RECT& outputRect, float& bestIntersectArea);
+        bool IntersectWindowAndOutput(RECT windowRect, RECT outputRect, float& bestIntersectArea);
 
     private:
         // Internal members

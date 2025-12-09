@@ -53,6 +53,14 @@ class FSRRenderModule : public cauldron::RenderModule
 
     } UpscalerType;
 
+    enum UICompositionMode
+    {
+        No_UI_Handling = 0,
+        UiTexture,
+        UiCallback,
+		PreUiBackbuffer,
+	};
+
 public:
     FSRRenderModule()
         : RenderModule(L"FSRApiRenderModule"),
@@ -108,9 +116,69 @@ public:
         UpdatePreset((int32_t*)&m_ScalePreset);
     }
 
-private:
+    void SetUpscaleMethodHotkey(int32_t method)
+    {
+        if (method != m_UiUpscaleMethod)
+        {
+            m_UiUpscaleMethod = method;
+            SwitchUpscaler(method);
+        }
+    }
 
-    enum class FSRScalePreset
+    void SetScalePresetHotkey(int32_t preset)
+    {
+        if (preset >= 0 && preset <= static_cast<int32_t>(FSRScalePreset::UltraPerformance))
+        {
+            int32_t oldPreset = static_cast<int32_t>(m_ScalePreset);
+            m_ScalePreset = static_cast<FSRScalePreset>(preset);
+            m_IsNonNative = (preset != 0);
+            UpdatePreset(&oldPreset);
+        }
+    }
+
+    void SetFrameInterpolationHotkey(bool enabled)
+    {
+        if (m_EnableFrameInterpolationSwapchain && m_FrameInterpolation != enabled)
+        {
+            m_FrameInterpolation = enabled;
+            m_OfUiEnabled = m_FrameInterpolation && s_enableSoftwareMotionEstimation;
+            m_NeedReInit = true;
+        }
+    }
+
+    void EnableFrameInterpolationSwapchain(bool enabled);
+
+private:
+    struct Version
+    {
+        uint32_t major;
+        uint32_t minor;
+        uint32_t patch;
+
+        operator std::string() const
+        {
+            return std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
+        }
+
+        Version& operator=(const std::string& str)
+        {
+            return from_string(str.c_str());
+        }
+
+        Version& operator=(const char* str)
+        {
+            return from_string(str);
+        }
+
+    private:
+        Version& from_string(const char* str)
+        {
+            sscanf_s(str, "%u.%u.%u", &major, &minor, &patch);
+            return *this;
+        }
+    };
+
+    enum class FSRScalePreset : int32_t
     {
         NativeAA = 0,       // 1.0f
         Quality,            // 1.5f
@@ -131,8 +199,12 @@ private:
     enum FSRDebugCheckerMode
     {
         Disabled = 0,
-        EnabledNoMessageCallback,
-        EnabledWithMessageCallback
+        EnabledNoMessageCallbackSilence,
+        EnabledNoMessageCallbackErrors,
+        EnabledNoMessageCallbackWarnings,
+        EnabledWithMessageCallbackSilence,
+        EnabledWithMessageCallbackErrors,
+        EnabledWithMessageCallbackWarnings,
     };
 
     enum class FSRColorSpace
@@ -178,6 +250,8 @@ private:
     uint32_t        m_JitterIndex     = 0;
     float           m_JitterX         = 0.f;
     float           m_JitterY         = 0.f;
+    float           m_PreviousJitterX = 0.f;
+    float           m_PreviousJitterY = 0.f;
     uint64_t        m_FrameID         = 0;
 
     bool m_IsNonNative                              = true;
@@ -209,6 +283,8 @@ private:
     bool m_ResetFrameInterpolation                  = false;
     bool m_DoublebufferInSwapchain                  = false;
     bool m_OfUiEnabled                              = true;
+    bool m_FrameGenerationDebugViewEnabled          = false;
+    bool m_EnableFrameInterpolationSwapchain        = false;
 
     // FFX API Context members
     std::vector<uint64_t> m_FsrVersionIds;
@@ -217,6 +293,11 @@ private:
     uint64_t    m_currentUpscaleContextVersionId = 0;
     const char* m_currentUpscaleContextVersionName = nullptr;
     std::vector<const char*> m_FsrVersionNames;
+
+    std::vector<uint64_t> m_FgVersionIds;
+    int32_t m_FgVersionIndex = 0;
+    std::vector<const char*> m_FgVersionNames;
+    Version m_currentFgContextVersion = {};
 
     bool m_ffxBackendInitialized = false;
     ffx::Context m_UpscalingContext = nullptr;
@@ -245,14 +326,17 @@ private:
     std::function<cauldron::ResolutionInfo(uint32_t, uint32_t)> m_pUpdateFunc = nullptr;
 
     bool     s_enableSoftwareMotionEstimation = true;
-    int32_t  s_uiRenderMode      = 2;
-    int32_t  s_uiRenderModeNextFrame = 2; // needs to be in-sync with s_uiRenderMode after deviating at most 1 frame.
+    int32_t  s_uiRenderMode      = UICompositionMode::UiCallback;
+    int32_t  s_uiRenderModeNextFrame = UICompositionMode::UiCallback; // needs to be in-sync with s_uiRenderMode after deviating at most 1 frame.
 
     // Surfaces for different UI render modes
     uint32_t                 m_curUiTextureIndex  = 0;
     const cauldron::Texture* m_pUiTexture[2]      = {};
     const cauldron::Texture* m_pHudLessTexture[2] = {};
     const cauldron::Texture* m_pDistortionField[2] = {};
+
+    //surface interpolation output for DXGI swapchain
+    const cauldron::Texture* m_pInterpolationOutput = nullptr;
 
     TAARenderModule*          m_pTAARenderModule         = nullptr;
     ToneMappingRenderModule*  m_pToneMappingRenderModule = nullptr;
@@ -276,6 +360,9 @@ private:
     uint32_t m_HybridSpinTime;
     bool m_AllowWaitForSingleObjectOnFence;
     FfxApiSwapchainFramePacingTuning framePacingTuning;
+    uint32_t m_CameraAnimationMode = 0;
+    bool m_EnableCameraAnimationNoise = false;
+    bool m_ChangeCameraAnimationDirection = false; // there are only two directions, so use the bool directly
 
     bool   getLatencyWaitableObject = false;
     HANDLE latencyWaitableObj = 0;

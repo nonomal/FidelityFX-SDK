@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "../../render/rendermodule.h"
-#include "../../core/uimanager.h"
+#include "../../framework/render/rendermodule.h"
+#include "../../framework/core/uimanager.h"
 
 #include <vector>
 

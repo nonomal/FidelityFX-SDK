@@ -45,7 +45,7 @@ union NumKeys
 class ParallelSort
 {
 public:
-    ParallelSort() {}
+    ParallelSort() = default;
     ~ParallelSort();
 
     void Init(uint32_t maxEntries, bool bHasPayload, bool bIndirect);

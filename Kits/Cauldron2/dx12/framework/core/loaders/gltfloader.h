@@ -137,7 +137,7 @@ namespace cauldron
         static void LoadAnimInterpolant(AnimInterpolants& animInterpolant, const json& gltfData, int32_t interpAccessorID, const GLTFBufferLoadParams* pBufferLoadParams);
         static void LoadAnimInterpolants(AnimChannel* pAnimChannel, AnimChannel::ComponentSampler samplerType, int32_t samplerIndex, const GLTFBufferLoadParams* pBufferLoadParams);
         static void GetBufferDetails(int accessor, AnimInterpolants* pAccessor, const GLTFBufferLoadParams* pBufferLoadParams);
-        static void BuildBLAS(std::vector<Mesh*> meshes);
+        static void BuildBLAS(const std::vector<Mesh*>& meshes);
 
         void PostGLTFContentLoadCompleted(void* pParam);
     };

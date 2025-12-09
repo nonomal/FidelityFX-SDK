@@ -198,6 +198,10 @@ namespace cauldron
         float Xfov = std::min<float>(m_pData->Perspective.Yfov * m_pData->Perspective.AspectRatio, CAULDRON_PI2);
         m_pData->Perspective.Yfov = Xfov / m_pData->Perspective.AspectRatio;
 
+        // Use FLT_MAX, as finite far plane for infinite far plane projection
+        if (s_InvertedDepth)
+            m_pData->Zfar = FLT_MAX;
+
         return Perspective(m_pData->Perspective.Yfov, m_pData->Perspective.AspectRatio, m_pData->Znear, m_pData->Zfar, s_InvertedDepth);
     }
 
@@ -238,13 +242,49 @@ namespace cauldron
         // If this camera is the currently active camera for the scene, check for input
         if (GetScene()->GetCurrentCamera() == this)
         {
-            // if (animated)
-            // {
-            //      #pragma message(Reminder "Support camera animations")
-            //      Update positional info with animation
-            //      Mark camera dirty
-            // }
-            // else
+            // We will scale camera displacement according to the size of the scene
+            const BoundingBox& boundingBox = GetScene()->GetBoundingBox();
+            float sceneSize = length(boundingBox.GetMax().getXYZ() - boundingBox.GetMin().getXYZ());
+            float displacementIncr = 0.05f * sceneSize;  // Displacements are 5% of scene size by default
+
+            Vec4 eyePos = Vec4();
+            Vec4 lookAt = Vec4();
+            Vec4 movement = Vec4(0, 0, 0, 0.f);
+            if (m_AnimationMode == CameraAnimation::SinusoidalRotation)
+            {
+                m_AnimationAccumTime += static_cast<float>(deltaTime);
+                // TODO: expose these parameters via Camera object
+                const float heightAmplitude = 0.01f; // Amplitude of up/down movement
+                const float heightFrequency = 5.0f; // Frequency of up/down movement
+                const float rotationSpeed = 0.5f;   // Radians per second
+
+                const float sinus = sin(static_cast<float>(m_AnimationAccumTime) * heightFrequency);
+
+                float rotation = m_AnimationDirection * static_cast<float>(deltaTime) * rotationSpeed;
+                m_Yaw += rotation;
+
+                m_Pitch += heightAmplitude * sinus;
+
+                float y = displacementIncr * sinus;
+                float xz = 0;
+                if (m_AnimationNoise)
+                {
+                    std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+                    float currentNoise = distribution(generator);
+                    float smoothedNoise = Lerp(m_PreviousNoise, currentNoise, 0.1f);
+                    m_PreviousNoise = currentNoise;
+                    m_Yaw += smoothedNoise / 1000; // 0.001% of impact on Yaw
+                    m_Pitch += smoothedNoise / 200; // 0.005% of impact on Pitch
+                    xz = smoothedNoise / 10; // 10% of impact on XZ plane
+                }
+                movement = Vec4(xz, y, xz, 0.f);
+
+                // no need for calling m_Dirty since if there is a change it will be done below.
+            }
+            else if (m_AnimationMode == CameraAnimation::CircleRotation)
+            {
+                // TODO: TBD
+            }
 
             // Do camera update (Updates will be made to View matrix - similar to Cauldron 1 - and then pushed up to owner via InvViewMatrix)
             {
@@ -253,11 +293,6 @@ namespace cauldron
                 // Camera mode toggle
                 if (inputState.GetMouseButtonUpState(Mouse_RButton) || inputState.GetGamePadButtonUpState(Pad_L3))
                     m_ArcBallMode = !m_ArcBallMode;
-
-                // We will scale camera displacement according to the size of the scene
-                const BoundingBox& boundingBox = GetScene()->GetBoundingBox();
-                float sceneSize = length(boundingBox.GetMax().getXYZ() - boundingBox.GetMin().getXYZ());
-                float displacementIncr = 0.05f * sceneSize;  // Displacements are 5% of scene size by default
 
                 // If we are holding down ctrl, magnify the displacement by 10
                 if (inputState.GetKeyState(Key_Ctrl))
@@ -300,9 +335,9 @@ namespace cauldron
                     return;
                 }
 
-                Vec4 eyePos = Vec4(m_InvViewMatrix.getTranslation(), 0.f);
+                eyePos = Vec4(m_InvViewMatrix.getTranslation(), 0.f);
                 Vec4 polarVector = PolarToVector(m_Yaw, m_Pitch);
-                Vec4 lookAt = eyePos - polarVector;
+                lookAt = eyePos - polarVector;
                 // If we are in arc-ball mode, do arc-ball based camera updates
                 if (m_ArcBallMode && (hasRotation || inputState.GetMouseAxisDelta(Mouse_Wheel)))
                 {
@@ -340,7 +375,8 @@ namespace cauldron
                     z -= inputState.GetGamePadAxisState(Pad_LeftThumbY) * displacementIncr;
                     y -= inputState.GetGamePadAxisState(Pad_LTrigger) * displacementIncr;
                     y += inputState.GetGamePadAxisState(Pad_RTrigger) * displacementIncr;
-                    Vec4 movement = Vec4(x, y, z, 0.f);
+
+                    movement += Vec4(x, y, z, 0.f);
 
                     Mat4& transform = m_pOwner->GetTransform();
 
@@ -355,6 +391,7 @@ namespace cauldron
                         m_Dirty = true;
                     }
                 }
+            }
 
                 // Update camera jitter if we need it
                 if (CameraComponent::s_pSetJitterCallback)
@@ -376,7 +413,6 @@ namespace cauldron
                 {
                     LookAt(eyePos, lookAt);
                     UpdateMatrices();         
-                }
             }
         }
     }
@@ -399,17 +435,5 @@ namespace cauldron
         // No longer dirty
         m_Dirty = false;
      }
-
-    const float CameraComponent::GetNearPlane() const
-    {
-        static bool s_InvertedDepth = GetConfig()->InvertedDepth;
-        return s_InvertedDepth ? m_pData->Zfar : m_pData->Znear;
-    }
-
-    const float CameraComponent::GetFarPlane() const
-    {
-        static bool s_InvertedDepth = GetConfig()->InvertedDepth;
-        return s_InvertedDepth ? m_pData->Znear : m_pData->Zfar;
-    }
 
 } // namespace cauldron

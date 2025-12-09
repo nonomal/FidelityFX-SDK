@@ -35,38 +35,11 @@
 #include "../../../../FidelityFX/api/internal/ffx_interface.h"
 // Temporary
 
-#include "../../../../FidelityFX/api/include/ffx_api_types.h"
-#include "../render/dx12/swapchain_dx12.h"
 #include "../render/dx12/gpuresource_dx12.h"
 #include "../../../../FidelityFX/api/include/dx12/ffx_api_dx12.h"
 
 namespace SDKWrapper
 {
-/**
-* @brief  Query how much memory is required for the backend's scratch buffer.
-*/
-size_t         ffxGetScratchMemorySize(size_t maxContexts);
-/**
-* @brief  Initialize the <c><i>FfxInterface</i></c> with function pointers for the backend.
-*/
-FfxErrorCode   ffxGetInterface(FfxInterface* backendInterface, cauldron::Device* device, void* scratchBuffer, size_t scratchBufferSize, size_t maxContexts);
-/**
-* @brief  Create a <c><i>FfxCommandList</i></c> from a <c><i>CommandList</i></c>.
-*/
-FfxCommandList ffxGetCommandList(cauldron::CommandList* cauldronCmdList);
-/**
-* @brief  Create a <c><i>FfxPipeline</i></c> from a <c><i>PipelineObject</i></c>.
-*/
-FfxPipeline    ffxGetPipeline(cauldron::PipelineObject* cauldronPipeline);
-/**
-* @brief  Fetch a <c><i>FfxApiResource</i></c> from a <c><i>GPUResource</i></c>.
-*/
-FfxApiResource    ffxGetResource(const cauldron::GPUResource* cauldronResource,
-                              const wchar_t*               name             = nullptr,
-                              FfxApiResourceState            state            = FFX_API_RESOURCE_STATE_COMPUTE_READ,
-                              FfxApiResourceUsage             additionalUsages = (FfxApiResourceUsage)0);
-
-
 static inline FfxApiResource ffxGetResourceApi(const cauldron::GPUResource* cauldronResource,
     uint32_t            state = FFX_API_RESOURCE_STATE_COMPUTE_READ,
     uint32_t            additionalUsages = 0)
@@ -81,48 +54,6 @@ static inline FfxApiResource ffxGetResourceApi(const cauldron::GPUResource* caul
     cauldron::CauldronCritical(L"Unsupported API or Platform for FFX Validation Remap");
     return FfxApiResource();   // Error
 }
-
-/**
-* @brief Replaces the current swapchain with the provided <c><i>FfxSwapchain</i></c> for FSR 3 frame interpolation support.
-*/
-FfxErrorCode           ffxReplaceSwapchainForFrameinterpolation(FfxCommandQueue gameQueue, FfxSwapchain& gameSwapChain, const void* replacementParameters);
-/**
-* @brief Registers a <c><i>FfxApiResource</i></c> to use for UI with the provided <c><i>FfxSwapchain</i></c> for FSR 3 frame interpolation support.
-*/
-FfxErrorCode           ffxRegisterFrameinterpolationUiResource(FfxSwapchain gameSwapChain, FfxApiResource uiResource, uint32_t flags);
-/**
-* @brief Fetches a <c><i>FfxCommandList</i></c> from the <c><i>FfxSwapchain</i> for FSR 3 frame interpolation support</c> for FSR 3 frame interpolation support.
-*/
-FfxErrorCode           ffxGetInterpolationCommandlist(FfxSwapchain gameSwapChain, FfxCommandList& gameCommandlist);
-/**
-* @brief Fetch a <c><i>FfxSwapchain</i></c> from a Cauldron SwapChain.
-*/
-FfxSwapchain           ffxGetSwapchain(cauldron::SwapChain* pSwapChain);
-/**
-* @brief Fetch a <c><i>FfxCommandQueue</i></c> from a Cauldron Device.
-*/
-FfxCommandQueue        ffxGetCommandQueue(cauldron::Device* pDevice);
-/**
-* @brief Fetch a <c><i>FfxApiResourceDescription</i></c> from a Cauldron GPUResource.
-*/
-FfxApiResourceDescription ffxGetResourceDescription(cauldron::GPUResource* pResource);
-/**
-* @brief Fetches a <c><i>FfxApiResource</i></c> representing the backbuffer from the <c><i>FfxSwapchain</i></c> for FSR 3 frame interpolation support.
-*/
-FfxApiResource            ffxGetFrameinterpolationTexture(FfxSwapchain ffxSwapChain);
-/**
-* @brief Configures the swap chain for FSR 3 interpolation.
-*/
-void                   ffxSetupFrameInterpolationSwapChain();
-/**
-* @brief Restores previous configuration swap chain to state before FSR 3 interpolation was configured (see ffxSetupFrameInterpolationSwapChain).
-*/
-void                   ffxRestoreApplicationSwapChain();
-
-/**
-* @brief Performs constant buffer allocation using our own allocator
-*/
-//FfxConstantAllocation ffxAllocateConstantBuffer(void* data, FfxUInt64 dataSize);
 
 //////////////////////////////////////////////////////////////////////////
 // FFX to Framework conversion functions
@@ -177,6 +108,8 @@ static cauldron::ResourceFormat GetFrameworkSurfaceFormat(FfxApiSurfaceFormat fo
         return cauldron::ResourceFormat::R16_SNORM;
     case FFX_API_SURFACE_FORMAT_R8_UNORM:
         return cauldron::ResourceFormat::R8_UNORM;
+    case FFX_API_SURFACE_FORMAT_R8_SNORM:
+        return cauldron::ResourceFormat::R8_SNORM;
     case FFX_API_SURFACE_FORMAT_R8_UINT:
         return cauldron::ResourceFormat::R8_UINT;
     case FFX_API_SURFACE_FORMAT_R8G8_UNORM:
@@ -244,7 +177,7 @@ inline cauldron::ResourceState GetFrameworkState(FfxApiResourceState state)
     }
 }
 
-inline cauldron::TextureDesc GetFrameworkTextureDescription(FfxApiResourceDescription desc)
+inline cauldron::TextureDesc GetFrameworkTextureDescription(const FfxApiResourceDescription& desc)
 {
     cauldron::ResourceFormat format = GetFrameworkSurfaceFormat((FfxApiSurfaceFormat)desc.format);
     cauldron::ResourceFlags  flags  = GetFrameworkResourceFlags((FfxApiResourceUsage)desc.usage);
@@ -264,7 +197,7 @@ inline cauldron::TextureDesc GetFrameworkTextureDescription(FfxApiResourceDescri
     }
 }
 
-inline cauldron::BufferDesc GetFrameworkBufferDescription(FfxApiResourceDescription desc)
+inline cauldron::BufferDesc GetFrameworkBufferDescription(const FfxApiResourceDescription& desc)
 {
     if (desc.type == FFX_API_RESOURCE_TYPE_BUFFER)
     {
@@ -340,6 +273,8 @@ static cauldron::ResourceFormat GetFrameworkSurfaceFormatApi(uint32_t format)
         return cauldron::ResourceFormat::R8_TYPELESS;
     case FFX_API_SURFACE_FORMAT_R8_UNORM:
         return cauldron::ResourceFormat::R8_UNORM;
+    case FFX_API_SURFACE_FORMAT_R8_SNORM:
+        return cauldron::ResourceFormat::R8_SNORM;
     case FFX_API_SURFACE_FORMAT_R8_UINT:
         return cauldron::ResourceFormat::R8_UINT;
     case FFX_API_SURFACE_FORMAT_R8G8_TYPELESS:
@@ -450,6 +385,8 @@ inline FfxApiSurfaceFormat GetFfxSurfaceFormat(cauldron::ResourceFormat format)
         return FFX_API_SURFACE_FORMAT_R8_TYPELESS;
     case (cauldron::ResourceFormat::R8_UNORM):
         return FFX_API_SURFACE_FORMAT_R8_UNORM;
+    case (cauldron::ResourceFormat::R8_SNORM):
+        return FFX_API_SURFACE_FORMAT_R8_SNORM;
     case cauldron::ResourceFormat::RG8_TYPELESS:
         return FFX_API_SURFACE_FORMAT_R8G8_TYPELESS;
     case cauldron::ResourceFormat::RG8_UNORM:
@@ -537,6 +474,22 @@ inline FfxApiResourceDescription GetFfxResourceDescription(const cauldron::GPURe
     }
 
     return resourceDescription;
+}
+
+static FfxApiBackbufferTransferFunction GetFfxApiBackbufferTransferFunction(const DisplayMode displayMode)
+{
+    switch (displayMode)
+    {
+    case DisplayMode::DISPLAYMODE_LDR:
+        return FfxApiBackbufferTransferFunction::FFX_API_BACKBUFFER_TRANSFER_FUNCTION_SRGB;
+    case DisplayMode::DISPLAYMODE_HDR10_2084:
+        return FfxApiBackbufferTransferFunction::FFX_API_BACKBUFFER_TRANSFER_FUNCTION_PQ;
+    case DisplayMode::DISPLAYMODE_HDR10_SCRGB:
+        return FfxApiBackbufferTransferFunction::FFX_API_BACKBUFFER_TRANSFER_FUNCTION_SCRGB;
+    default:
+        cauldron::CauldronCritical(L"FFXInterface: Cauldron: Unsupported display mode requested. Please implement.");
+        return FfxApiBackbufferTransferFunction::FFX_API_BACKBUFFER_TRANSFER_FUNCTION_SRGB;
+    }
 }
 
 } // namespace SDKWrapper

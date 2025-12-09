@@ -31,6 +31,20 @@
 
 namespace cauldron
 {
+
+namespace
+{
+    uint32_t GetSubresourceCount(const D3D12_RESOURCE_DESC& resourceDesc)
+    {
+        const bool isTexture3D = (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D);
+        const uint32_t arraySize = isTexture3D ? 1u : resourceDesc.DepthOrArraySize;
+        const uint32_t mipCount = resourceDesc.MipLevels;
+        constexpr uint32_t planeCount = 1u; // No multi-plane ResourceFormats are exposed. 
+
+        return mipCount * arraySize * planeCount;
+    }
+}
+
     typedef struct BreadcrumbsBlockData
     {
         void*    memory;       ///< Pointer to CPU mapped GPU buffer memory.
@@ -120,7 +134,7 @@ namespace cauldron
         m_pResource->SetName(resourceName);
 
         // Setup sub-resource states
-        InitSubResourceCount(m_ResourceDesc.DepthOrArraySize * m_ResourceDesc.MipLevels);
+        InitSubResourceCount(GetSubresourceCount(m_ResourceDesc));
     }
 
     GPUResourceInternal::GPUResourceInternal(D3D12_RESOURCE_DESC& resourceDesc, void* pExternalOwner, ResourceState initialState, const wchar_t* resourceName) :
@@ -158,7 +172,7 @@ namespace cauldron
         blockData->baseAddress = (uint64_t)m_pResource->GetGPUVirtualAddress();
 
         // Setup sub-resource states
-        InitSubResourceCount(m_ResourceDesc.DepthOrArraySize * m_ResourceDesc.MipLevels);
+        InitSubResourceCount(GetSubresourceCount(m_ResourceDesc));
     }
 
     GPUResourceInternal::GPUResourceInternal(D3D12_RESOURCE_DESC& resourceDesc, D3D12_HEAP_TYPE heapType, ResourceState initialState, const wchar_t* resourceName, void* pOwner, bool resizable) :
@@ -187,7 +201,7 @@ namespace cauldron
             }
         }
         // Setup sub-resource states
-        InitSubResourceCount(m_ResourceDesc.DepthOrArraySize * m_ResourceDesc.MipLevels);
+        InitSubResourceCount(GetSubresourceCount(m_ResourceDesc));
     }
 
     GPUResourceInternal::~GPUResourceInternal()
@@ -274,7 +288,7 @@ namespace cauldron
         }
         m_ResourceDesc = resourceDesc;
         // Setup sub-resource states
-        InitSubResourceCount(m_ResourceDesc.DepthOrArraySize * m_ResourceDesc.MipLevels);
+        InitSubResourceCount(GetSubresourceCount(m_ResourceDesc));
         CreateResourceInternal(heapType, initialState);
     }
 
@@ -336,7 +350,7 @@ namespace cauldron
             pClearValue = &clearValue;
         }
 
-        CauldronThrowOnFail(GetDevice()->GetImpl()->GetD3D12MemoryAllocator()->CreateResource(&allocationDesc, &m_ResourceDesc, GetDXResourceState(initialState),
+        CauldronThrowOnFail(GetDevice()->GetImpl()->GetD3D12MemoryAllocator()->CreateResource(&allocationDesc, &m_ResourceDesc, GetDXResourceState(m_ResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER ? ResourceState::CommonResource : initialState),
             pClearValue, &m_pAllocation, IID_PPV_ARGS(&m_pResource)));
 
         // And set a resource name
@@ -360,6 +374,8 @@ namespace cauldron
             return DXGI_FORMAT_R8_TYPELESS;
         case ResourceFormat::R8_UNORM:
             return DXGI_FORMAT_R8_UNORM;
+        case ResourceFormat::R8_SNORM:
+            return DXGI_FORMAT_R8_SNORM;
 
             // 16-bit
         case ResourceFormat::R16_SINT:
@@ -575,6 +591,7 @@ namespace cauldron
         {
             // 8-bit
         case ResourceFormat::R8_UNORM:
+        case ResourceFormat::R8_SNORM:
             return 1;
 
             // 16-bit

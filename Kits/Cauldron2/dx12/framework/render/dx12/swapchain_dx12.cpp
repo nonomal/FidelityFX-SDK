@@ -160,7 +160,8 @@ namespace cauldron
 
         // Make sure the buffer is ready to render into
         const uint64_t fenceValue = m_BackBufferFences[m_CurrentBackBuffer];
-        GetDevice()->WaitOnQueue(fenceValue, m_CreationQueue);
+        if (fenceValue != 0)
+            GetDevice()->WaitOnQueue(fenceValue, m_CreationQueue);
     }
 
     void SwapChainInternal::Present()
@@ -258,7 +259,7 @@ namespace cauldron
         GetWindowRect(hWnd, &windowRect);
 
         float bestIntersectArea = -1.0f;
-        for (auto output : m_pAttachedOutputs)
+        for (const auto& output : m_pAttachedOutputs)
         {
             DXGI_OUTPUT_DESC outputDesc;
             CauldronThrowOnFail(output->GetDesc(&outputDesc));
@@ -294,7 +295,7 @@ namespace cauldron
             m_HDRMetadata.GreenPrimary[0] = outputDesc1.GreenPrimary[0];
             m_HDRMetadata.GreenPrimary[1] = outputDesc1.GreenPrimary[1];
             m_HDRMetadata.BluePrimary[0]  = outputDesc1.BluePrimary[0];
-            m_HDRMetadata.BluePrimary[0]  = outputDesc1.BluePrimary[1];
+            m_HDRMetadata.BluePrimary[1]  = outputDesc1.BluePrimary[1];
             m_HDRMetadata.WhitePoint[0]   = outputDesc1.WhitePoint[0];
             m_HDRMetadata.WhitePoint[1]   = outputDesc1.WhitePoint[1];
             m_HDRMetadata.MinLuminance    = outputDesc1.MinLuminance;
@@ -399,7 +400,7 @@ namespace cauldron
         return (std::max)(0, (std::min)(ax2, bx2) - (std::max)(ax1, bx1)) * (std::max)(0, (std::min)(ay2, by2) - (std::max)(ay1, by1));
     }
 
-    bool SwapChainInternal::IntersectWindowAndOutput(const RECT& windowRect, const RECT& outputRect, float& bestIntersectArea)
+    bool SwapChainInternal::IntersectWindowAndOutput(RECT windowRect, RECT outputRect, float& bestIntersectArea)
     {
         LONG ax1 = windowRect.left;
         LONG ay1 = windowRect.top;
@@ -475,7 +476,7 @@ namespace cauldron
     RECT clientRectToScreenSpace(HWND const hWnd)
     {
         RECT rc{0};
-        if (GetClientRect(hWnd, &rc) == TRUE)
+        if (GetClientRect(hWnd, &rc) != FALSE)
         {
                 if (MapWindowPoints(hWnd, nullptr, reinterpret_cast<POINT*>(&rc), 2) == 0)
                 {

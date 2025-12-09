@@ -78,6 +78,8 @@ private:
     const cauldron::Texture*    m_pNormalTexture                = nullptr;
     const cauldron::Texture*    m_pAoRoughnessMetallicTexture   = nullptr;
     const cauldron::Texture*    m_pDepthTexture                 = nullptr;
+    const cauldron::RasterView* m_pRenderTargetRasterView = {};
+
     cauldron::ParameterSet*     m_pParameters                   = nullptr;
 
     uint32_t            m_ShadowMapCount                        = 0; // temporary variable to track the number of shadow maps

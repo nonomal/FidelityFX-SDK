@@ -28,13 +28,13 @@
 #include <windows.h>
 #include <dxgi1_6.h>
 
-#include "../../libs/AGS/amd_ags.h"
+#include "../../../../../OpenSource/amd/ags/amd_ags.h"
 
 #ifndef D3D12MA_USING_DIRECTX_HEADERS
 #define D3D12MA_USING_DIRECTX_HEADERS
 #endif // #ifndef D3D12MA_USING_DIRECTX_HEADERS
-#include "../../libs/memoryallocator/D3D12MemAlloc.h"
-#include "../../libs/antilag2/ffx_antilag2_dx12.h"
+#include "../../../../../OpenSource/amd/memoryallocator/D3D12MemAlloc.h"
+#include "../../../../../OpenSource/amd/antilag2/ffx_antilag2_dx12.h"
 
 namespace cauldron
 {
@@ -56,7 +56,7 @@ namespace cauldron
         const ID3D12CommandQueue* DX12CmdQueue(CommandQueue queueType) const { return m_QueueSyncPrims[static_cast<int32_t>(queueType)].m_pQueue.Get(); }
         ID3D12CommandQueue* DX12CmdQueue(CommandQueue queueType) { return m_QueueSyncPrims[static_cast<int32_t>(queueType)].m_pQueue.Get(); }
 
-        const MSComPtr<IDXGIAdapter> GetAdapter() const
+        MSComPtr<IDXGIAdapter> GetAdapter() const
         {
             return m_pAdapter;
         }

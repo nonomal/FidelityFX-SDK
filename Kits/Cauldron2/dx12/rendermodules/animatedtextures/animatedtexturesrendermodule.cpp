@@ -82,6 +82,7 @@ void AnimatedTexturesRenderModule::Init(const json& initData)
 
     BlendDesc              blendDesc;
     std::vector<BlendDesc> blends;
+    blends.reserve(4u);
     blends.push_back(blendDesc);
     blendDesc.RenderTargetWriteMask = (uint32_t)ColorWriteMask::Red + (uint32_t)ColorWriteMask::Green;
     blends.push_back(blendDesc);
@@ -115,9 +116,10 @@ void AnimatedTexturesRenderModule::Init(const json& initData)
         [this](const std::vector<const Texture*>& textures, void* additionalParams) { this->TextureLoadComplete(textures, additionalParams); };
 
     std::vector<TextureLoadInfo> texturesToLoad;
-    texturesToLoad.push_back(TextureLoadInfo(L"..\\..\\..\\..\\..\\..\\media\\cauldronmedia\\Textures\\AnimatedTextures\\lion.jpg"));
-    texturesToLoad.push_back(TextureLoadInfo(L"..\\..\\..\\..\\..\\..\\media\\cauldronmedia\\Textures\\AnimatedTextures\\checkerboard.dds"));
-    texturesToLoad.push_back(TextureLoadInfo(L"..\\..\\..\\..\\..\\..\\media\\cauldronmedia\\Textures\\AnimatedTextures\\composition_text.dds"));
+    texturesToLoad.reserve(3u);
+    texturesToLoad.emplace_back(L"..\\..\\..\\..\\..\\..\\media\\cauldronmedia\\Textures\\AnimatedTextures\\lion.jpg");
+    texturesToLoad.emplace_back(L"..\\..\\..\\..\\..\\..\\media\\cauldronmedia\\Textures\\AnimatedTextures\\checkerboard.dds");
+    texturesToLoad.emplace_back(L"..\\..\\..\\..\\..\\..\\media\\cauldronmedia\\Textures\\AnimatedTextures\\composition_text.dds");
     GetContentManager()->LoadTextures(texturesToLoad, CompletionCallback);
 
     // Register UI

@@ -89,6 +89,7 @@ namespace cauldron
         {ResourceFormat::Unknown, "Unknown"},
         {ResourceFormat::R8_TYPELESS, "R8_TYPELESS"},
         {ResourceFormat::R8_UNORM, "R8_UNORM"},
+        {ResourceFormat::R8_SNORM, "R8_SNORM"},
         {ResourceFormat::R8_UINT, "R8_UINT"},
 
         // 16-bit
@@ -212,6 +213,7 @@ namespace cauldron
     ///////////////////////////////////////////////////////////////////
     // CommonFramework
     Framework* g_pFrameworkInstance = nullptr;
+    std::mutex g_FGContextMutex;
 
     Framework::Framework(const FrameworkInitParams* pInitParams) :
         m_pImpl(new FrameworkInternal(this, pInitParams)),
@@ -357,7 +359,7 @@ namespace cauldron
                 pRMInstance->UpdateUI(deltaTime);
                 pRMInstance->Execute(deltaTime, pCmdList);
                 });
-            m_ExecutionCallbacks.push_back(std::make_pair(pRMInstance->GetName(), defaultCallback));
+            m_ExecutionCallbacks.emplace_back(pRMInstance->GetName(), defaultCallback);
 
             // Complete initialization after all instances have been created
             m_RenderModules.push_back(pRMInstance);
@@ -1010,7 +1012,7 @@ namespace cauldron
                     if (filesystem::exists(configPath))
                     {
                         json rmConfigData;
-                        CauldronAssert(ASSERT_CRITICAL, ParseJsonFile(configPath.c_str(), rmConfigData), L"Could not parse JSON file %ls", rmInfo.Name);
+                        CauldronAssert(ASSERT_CRITICAL, ParseJsonFile(configPath.c_str(), rmConfigData), L"Could not parse JSON file %ls", rmInfo.Name.c_str());
 
                         // Get the sample configuration
                         json configData = rmConfigData[rmInfo.Name];
@@ -1098,7 +1100,7 @@ namespace cauldron
         // Set or clear the resolution updater
         m_ResolutionUpdaterFn = (m_UpscalerEnabled) ? func : nullptr;
 
-        auto oldResolutionInfo = m_ResolutionInfo;
+        const auto oldResolutionInfo = m_ResolutionInfo;
         // Need to update the resolution info
         if (m_ResolutionUpdaterFn)
             m_ResolutionInfo = m_ResolutionUpdaterFn(m_ResolutionInfo.DisplayWidth, m_ResolutionInfo.DisplayHeight);
@@ -1217,9 +1219,9 @@ namespace cauldron
         ParseSampleConfig();
 
         // Add the RayTracing RenderModule only if is desired by the application
-        RenderModuleInfo rtRMInfo = {"RayTracingRenderModule", {}};
         if (m_Config.BuildRayTracingAccelerationStructure)
         {
+            RenderModuleInfo rtRMInfo = { "RayTracingRenderModule", {} };
             auto skinningRmIterator = m_Config.RenderModules.begin() + 1;
             // Add the RM after Compute Skinning
             m_Config.RenderModules.insert(skinningRmIterator, rtRMInfo);
@@ -1541,7 +1543,7 @@ namespace cauldron
                 else
                     CauldronCritical(L"Could not convert provided command line displaymode to enum value.");
 
-                m_Config.BenchmarkPermutationOptions.push_back(std::make_pair(L"displaymode", command));
+                m_Config.BenchmarkPermutationOptions.emplace_back(L"displaymode", command);
 
                 currentArg += 1;
                 continue;
@@ -1755,11 +1757,11 @@ namespace cauldron
                         // update stats
                         for (size_t i = 0; i < cpuTimings.size(); i++)
                         {
-                            m_CpuPerfStats[i].timings.push_back(cpuTimings[i].GetDuration());
+                            m_CpuPerfStats[i].timings.emplace_back(cpuTimings[i].GetDuration());
                         }
                         for (size_t i = 0; i < gpuTimings.size(); i++)
                         {
-                            m_GpuPerfStats[i].timings.push_back(gpuTimings[i].GetDuration());
+                            m_GpuPerfStats[i].timings.emplace_back(gpuTimings[i].GetDuration());
                         }
                         m_PerfFrameCount++;
                     }
@@ -1954,7 +1956,10 @@ namespace cauldron
         std::map<std::wstring, ComponentMgr*>::iterator iter = m_ComponentManagers.find(pComponentManager->ComponentType());
         CauldronAssert(ASSERT_ERROR, iter == m_ComponentManagers.end(), L"Component manager %ls is being registered multiple times. Ignoring duplicate registration", pComponentManager->ComponentType());
         if (iter != m_ComponentManagers.end())
+        {
+            delete pComponentManager;
             return;
+        }
 
         // Add it to the list and initialize it (if needed)
         m_ComponentManagers.emplace(std::make_pair(pComponentManager->ComponentType(), pComponentManager));
@@ -2077,12 +2082,12 @@ namespace cauldron
             desc.Height = displayHeight;
             };
 
-        std::vector<std::wstring> uiTexNames = { L"SwapChainProxy", L"UITarget0", L"UITarget1" };
-        for (auto texName : uiTexNames)
+        const wchar_t* const uiTexNames[] = { L"SwapChainProxy", L"UITarget0", L"UITarget1" };
+        for (const auto texName : uiTexNames)
         {
             uiTextureDesc.Name = texName;
             const Texture* pRenderTarget = m_pDynamicResourcePool->CreateRenderTexture(&uiTextureDesc, resizeFunc);
-            CauldronAssert(ASSERT_CRITICAL, pRenderTarget, L"Could not create render target %ls", texName.c_str());
+            CauldronAssert(ASSERT_CRITICAL, pRenderTarget, L"Could not create render target %ls", texName);
         }
         
         return 0;

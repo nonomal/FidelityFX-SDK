@@ -146,7 +146,7 @@ namespace cauldron
         /**
          * @brief   Add the format of the render targets.
          */
-        void AddRasterFormats(const ResourceFormat& rtFormat, const ResourceFormat depthFormat = ResourceFormat::Unknown);
+        void AddRasterFormats(ResourceFormat rtFormat, const ResourceFormat depthFormat = ResourceFormat::Unknown);
         void AddRasterFormats(const std::vector<ResourceFormat>& rtFormats, const ResourceFormat depthFormat = ResourceFormat::Unknown);
 
         /**
@@ -160,19 +160,17 @@ namespace cauldron
          */
         PipelineDesc();
 
+        PipelineDesc(PipelineDesc&&) noexcept;
+
         /**
          * @brief   Destruction, implemented per api/platform.
          */
         virtual ~PipelineDesc();
 
-        PipelineDesc(PipelineDesc&&) = delete;
-        PipelineDesc(const PipelineDesc&&) = delete;
-
         /**
          * @brief   Move assignment overload, implemented per api/platform.
          */
         PipelineDesc& operator=(PipelineDesc&&) noexcept;
-        PipelineDesc& operator=(const PipelineDesc&&) noexcept;
 
         /**
          * @brief   Set the root signature for the pipeline.
@@ -232,6 +230,8 @@ namespace cauldron
 
     private:
         NO_COPY(PipelineDesc)
+
+        void DeleteImpl() noexcept;
     };
 
 } // namespace cauldron

@@ -172,8 +172,8 @@ namespace cauldron
 
         // Setup the shaders to build on the pipeline object
         DefineList defineList;
-        defineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
-        defineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
+        defineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
+        defineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
         {
             PipelineDesc uiPsoDesc;
             uiPsoDesc.SetRootSignature(m_pUIRootSignature);
@@ -184,9 +184,9 @@ namespace cauldron
 
             // Setup vertex elements
             std::vector<InputLayoutDesc> vertexAttributes;
-            vertexAttributes.push_back(InputLayoutDesc(VertexAttributeType::Position, ResourceFormat::RG32_FLOAT, 0, 0));
-            vertexAttributes.push_back(InputLayoutDesc(VertexAttributeType::Texcoord0, ResourceFormat::RG32_FLOAT, 0, 8));
-            vertexAttributes.push_back(InputLayoutDesc(VertexAttributeType::Color0, ResourceFormat::RGBA8_UNORM, 0, 16));
+            vertexAttributes.emplace_back(VertexAttributeType::Position, ResourceFormat::RG32_FLOAT, 0, 0);
+            vertexAttributes.emplace_back(VertexAttributeType::Texcoord0, ResourceFormat::RG32_FLOAT, 0, 8);
+            vertexAttributes.emplace_back(VertexAttributeType::Color0, ResourceFormat::RGBA8_UNORM, 0, 16);
             uiPsoDesc.AddInputLayout(vertexAttributes);
 
             // Setup blend and depth states
@@ -226,9 +226,9 @@ namespace cauldron
 
             // Setup vertex elements
             std::vector<InputLayoutDesc> vertexAttributes;
-            vertexAttributes.push_back(InputLayoutDesc(VertexAttributeType::Position, ResourceFormat::RG32_FLOAT, 0, 0));
-            vertexAttributes.push_back(InputLayoutDesc(VertexAttributeType::Texcoord0, ResourceFormat::RG32_FLOAT, 0, 8));
-            vertexAttributes.push_back(InputLayoutDesc(VertexAttributeType::Color0, ResourceFormat::RGBA8_UNORM, 0, 16));
+            vertexAttributes.emplace_back(VertexAttributeType::Position, ResourceFormat::RG32_FLOAT, 0, 0);
+            vertexAttributes.emplace_back(VertexAttributeType::Texcoord0, ResourceFormat::RG32_FLOAT, 0, 8);
+            vertexAttributes.emplace_back(VertexAttributeType::Color0, ResourceFormat::RGBA8_UNORM, 0, 16);
             uiPsoDesc.AddInputLayout(vertexAttributes);
 
             // Setup blend and depth states
@@ -475,6 +475,76 @@ namespace cauldron
                 vtxOffset += pIMCmdList->VtxBuffer.Size;
             }
 
+            if (m_bShouldClearRenderTargets)
+            {
+                GPUScopedProfileCapture UIMarker(pCmdList, L"Clear UI RTVs");
+                std::vector<Barrier> barriers;
+                barriers.push_back(Barrier::Transition(m_pRenderTarget->GetResource(),
+                    m_pRenderTarget->GetResource()->GetCurrentResourceState(),
+                    ResourceState::RenderTargetResource));
+                barriers.push_back(Barrier::Transition(m_pUiOnlyRenderTarget[0]->GetResource(),
+                    m_pUiOnlyRenderTarget[0]->GetResource()->GetCurrentResourceState(),
+                    ResourceState::RenderTargetResource));
+                barriers.push_back(Barrier::Transition(m_pUiOnlyRenderTarget[1]->GetResource(),
+                    m_pUiOnlyRenderTarget[1]->GetResource()->GetCurrentResourceState(),
+                    ResourceState::RenderTargetResource));
+                if (m_pHudLessRenderTarget[0])
+                {
+                    barriers.push_back(Barrier::Transition(m_pHudLessRenderTarget[0]->GetResource(),
+                        m_pHudLessRenderTarget[0]->GetResource()->GetCurrentResourceState(),
+                        ResourceState::RenderTargetResource));
+                }
+                if (m_pHudLessRenderTarget[1])
+                {
+                    barriers.push_back(Barrier::Transition(m_pHudLessRenderTarget[1]->GetResource(),
+                        m_pHudLessRenderTarget[1]->GetResource()->GetCurrentResourceState(),
+                        ResourceState::RenderTargetResource));
+                }
+                ResourceBarrier(pCmdList, static_cast<uint32_t> (barriers.size()), barriers.data());
+                float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                ResourceViewInfo viewInfo[5];
+                viewInfo[0] = m_pUIRasterView->GetResourceView();
+                viewInfo[1] = m_pUiOnlyRasterView[0]->GetResourceView();
+                viewInfo[2] = m_pUiOnlyRasterView[1]->GetResourceView();
+                ClearRenderTarget(pCmdList, &viewInfo[0], clearColor);
+                ClearRenderTarget(pCmdList, &viewInfo[1], clearColor);
+                ClearRenderTarget(pCmdList, &viewInfo[2], clearColor);
+                if (m_pHudLessRenderTarget[0])
+                {
+                    viewInfo[3] = m_pHudLessRasterView[0]->GetResourceView();
+                    ClearRenderTarget(pCmdList, &viewInfo[3], clearColor);
+                }
+                if (m_pHudLessRenderTarget[1])
+                {
+                    viewInfo[4] = m_pHudLessRasterView[1]->GetResourceView();
+                    ClearRenderTarget(pCmdList, &viewInfo[4], clearColor);
+                }
+                barriers.clear();
+                barriers.push_back(Barrier::Transition(m_pRenderTarget->GetResource(),
+                    ResourceState::RenderTargetResource,
+                    ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
+                barriers.push_back(Barrier::Transition(m_pUiOnlyRenderTarget[0]->GetResource(),
+                    ResourceState::RenderTargetResource,
+                    ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
+                barriers.push_back(Barrier::Transition(m_pUiOnlyRenderTarget[1]->GetResource(),
+                    ResourceState::RenderTargetResource,
+                    ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
+                if (m_pHudLessRenderTarget[0])
+                {
+                    barriers.push_back(Barrier::Transition(m_pHudLessRenderTarget[0]->GetResource(),
+                        ResourceState::RenderTargetResource,
+                        ResourceState::NonPixelShaderResource));
+                }
+                if (m_pHudLessRenderTarget[1])
+                {
+                    barriers.push_back(Barrier::Transition(m_pHudLessRenderTarget[1]->GetResource(),
+                        ResourceState::RenderTargetResource,
+                        ResourceState::NonPixelShaderResource));
+                }
+                ResourceBarrier(pCmdList, static_cast<uint32_t> (barriers.size()), barriers.data());
+                m_bShouldClearRenderTargets = false;
+            }
+
             if (m_AsyncRender)
             {
                 // Store value for later/different thread.
@@ -718,4 +788,10 @@ namespace cauldron
         ResourceBarrier(pCmdList, _countof(barriers), barriers);
     }
 
+    void UIRenderModule::OnResize(const cauldron::ResolutionInfo& resInfo)
+    {
+        if (!ModuleEnabled())
+            return;
+        m_bShouldClearRenderTargets = true;
+    }
 } // namespace cauldron

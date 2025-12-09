@@ -22,7 +22,7 @@
 
 #include "fpslimiterrendermodule.h"
 
-#include "../../core/framework.h"
+#include "../../../core/framework.h"
 #include "../../device.h"
 #include "../../parameterset.h"
 #include "../../pipelineobject.h"

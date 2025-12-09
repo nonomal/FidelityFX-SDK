@@ -104,7 +104,6 @@ void TranslucencyRenderModule::Init(const json& initData)
         SamplerDesc irradianceCubeSampler;
         irradianceCubeSampler.Filter = FilterFunc::MinMagMipPoint;
         irradianceCubeSampler.AddressW = AddressMode::Wrap;
-        irradianceCubeSampler.Filter = FilterFunc::MinMagMipPoint;
         irradianceCubeSampler.MaxAnisotropy = 1;
         samplers.clear();
         samplers.push_back(irradianceCubeSampler);
@@ -257,7 +256,7 @@ void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
                                            ResourceState::DepthRead | ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
     if (m_OptionalTransparencyOptions.OptionalTargets.size())
     {
-        for (auto iter : m_OptionalTransparencyOptions.OptionalTargets)
+        for (const auto& iter : m_OptionalTransparencyOptions.OptionalTargets)
             barriers.push_back(Barrier::Transition(iter.first->GetResource(), ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource, ResourceState::RenderTargetResource));
     }
     ResourceBarrier(pCmdList, static_cast<uint32_t>(barriers.size()), barriers.data());
@@ -283,7 +282,7 @@ void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     {
         ParticlesRenderData& renderParticles = *iterSpawners;
         processSpawnerInBarrier(renderParticles);
-        iterSpawners++;
+        ++iterSpawners;
     }
 
     // Bind raster resources
@@ -324,8 +323,8 @@ void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     for (auto& renderSurface : m_TranslucentRenderSurfaces)
     {
         // Depth gather
-        const Vectormath::Matrix4 wvp    = GetScene()->GetSceneInfo().CameraInfo.ViewProjectionMatrix * renderSurface.m_RenderSurface.pOwner->GetTransform();
-        const Vectormath::Vector4 center = renderSurface.m_RenderSurface.pSurface->Center();
+        const Mat4 wvp    = GetScene()->GetSceneInfo().CameraInfo.ViewProjectionMatrix * renderSurface.m_RenderSurface.pOwner->GetTransform();
+        const Vec4 center = renderSurface.m_RenderSurface.pSurface->Center();
         renderSurface.m_depth = (wvp * center).getW();
     }
     // Sort translucent object from further away to closes to the camera, this is needed for correct color blending
@@ -334,8 +333,8 @@ void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     for (auto& spawner : m_RenderParticleSpawners)
     {
         // Depth gather
-        const Vectormath::Matrix4 vp       = GetScene()->GetSceneInfo().CameraInfo.ViewProjectionMatrix * spawner.m_RenderParticles.pOwner->GetTransform();
-        const Vectormath::Vector4 position = Vectormath::Vector4(spawner.m_RenderParticles.pParticleSystem->GetPosition(), 1.0f);
+        const Mat4 vp       = GetScene()->GetSceneInfo().CameraInfo.ViewProjectionMatrix * spawner.m_RenderParticles.pOwner->GetTransform();
+        const Vec4 position = Vec4(spawner.m_RenderParticles.pParticleSystem->GetPosition(), 1.0f);
         spawner.m_depth                         = (vp * position).getW();
     }
     // Sort translucent object from further away to closes to the camera, this is needed for correct color blending
@@ -488,26 +487,26 @@ void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
         {
             const TranslucentRenderData& renderSurface = *iterSurfaces;
             processSurface(renderSurface);
-            iterSurfaces++;
+            ++iterSurfaces;
         }
         else
         {
             const ParticlesRenderData& renderParticles = *iterSpawners;
             processSpawner(renderParticles);
-            iterSpawners++;
+            ++iterSpawners;
         }
     }
     while (iterSurfaces != m_TranslucentRenderSurfaces.end())
     {
         const TranslucentRenderData& renderSurface = *iterSurfaces;
         processSurface(renderSurface);
-        iterSurfaces++;
+        ++iterSurfaces;
     }
     while (iterSpawners != m_RenderParticleSpawners.end())
     {
         const ParticlesRenderData& renderParticles = *iterSpawners;
         processSpawner(renderParticles);
-        iterSpawners++;
+        ++iterSpawners;
     }
 
     // Done drawing, unbind
@@ -531,7 +530,7 @@ void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     {
         ParticlesRenderData& renderParticles = *iterSpawners;
         processSpawnerOutBarrier(renderParticles);
-        iterSpawners++;
+        ++iterSpawners;
     }
 
     // Render modules expect resources coming in/going out to be in a shader read state
@@ -542,7 +541,7 @@ void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
                                            ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
     if (m_OptionalTransparencyOptions.OptionalTargets.size())
     {
-        for (auto iter : m_OptionalTransparencyOptions.OptionalTargets)
+        for (const auto& iter : m_OptionalTransparencyOptions.OptionalTargets)
             barriers.push_back(Barrier::Transition(iter.first->GetResource(), ResourceState::RenderTargetResource, ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
     }
     ResourceBarrier(pCmdList, static_cast<uint32_t>(barriers.size()), barriers.data());
@@ -683,16 +682,16 @@ void TranslucencyRenderModule::OnNewContentLoaded(ContentBlock* pContentBlock)
 
                     if (reactiveFlags != 0)
                     {
-                        defineList.insert(std::make_pair(L"REACTIVE_FLAGS", std::to_wstring(reactiveFlags).c_str()));
+                        defineList.emplace(L"REACTIVE_FLAGS", std::to_wstring(reactiveFlags).c_str());
 
                         // Add additional output/export support if needed
                         if (!m_OptionalTransparencyOptions.OptionalAdditionalOutputs.empty())
-                            defineList.insert(
-                                std::make_pair(L"ADDITIONAL_TRANSLUCENT_OUTPUTS", m_OptionalTransparencyOptions.OptionalAdditionalOutputs.c_str()));
+                            defineList.emplace(
+                                L"ADDITIONAL_TRANSLUCENT_OUTPUTS", m_OptionalTransparencyOptions.OptionalAdditionalOutputs.c_str());
 
                         if (!m_OptionalTransparencyOptions.OptionalAdditionalExports.empty())
-                            defineList.insert(
-                                std::make_pair(L"ADDITIONAL_TRANSLUCENT_EXPORTS", m_OptionalTransparencyOptions.OptionalAdditionalExports.c_str()));
+                            defineList.emplace(
+                                L"ADDITIONAL_TRANSLUCENT_EXPORTS", m_OptionalTransparencyOptions.OptionalAdditionalExports.c_str());
                     }
 
                     psoDesc.AddRasterStateDescription(&rasterDesc);
@@ -830,13 +829,13 @@ uint32_t TranslucencyRenderModule::CreatePipelineObject(const Surface* pSurface)
     {
         if (pMaterial->HasPBRMetalRough())
         {
-            defineList.insert(std::make_pair(L"MATERIAL_METALLICROUGHNESS", L""));
+            defineList.emplace(L"MATERIAL_METALLICROUGHNESS", L"");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Albedo, L"ID_albedoTexture", L"ID_albedoTexCoord");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::MetalRough, L"ID_metallicRoughnessTexture", L"ID_metallicRoughnessTexCoord");
         }
         else if (pMaterial->HasPBRSpecGloss())
         {
-            defineList.insert(std::make_pair(L"MATERIAL_SPECULARGLOSSINESS", L""));
+            defineList.emplace(L"MATERIAL_SPECULARGLOSSINESS", L"");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Albedo, L"ID_albedoTexture", L"ID_albedoTexCoord");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::SpecGloss, L"ID_specularGlossinessTexture", L"ID_specularGlossinessTexCoord");
         }
@@ -846,20 +845,20 @@ uint32_t TranslucencyRenderModule::CreatePipelineObject(const Surface* pSurface)
     AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Occlusion, L"ID_occlusionTexture", L"ID_occlusionTexCoord");
 
     if (pMaterial->HasDoubleSided())
-        defineList.insert(std::make_pair(L"ID_doublesided", L""));
+        defineList.emplace(L"ID_doublesided", L"");
 
     if (pMaterial->GetBlendMode() == MaterialBlend::Mask)
-        defineList.insert(std::make_pair(L"ID_alphaMask", L""));
+        defineList.emplace(L"ID_alphaMask", L"");
 
     // Add additional output/export support if needed
     if (!m_OptionalTransparencyOptions.OptionalAdditionalOutputs.empty())
-        defineList.insert(std::make_pair(L"ADDITIONAL_TRANSLUCENT_OUTPUTS", m_OptionalTransparencyOptions.OptionalAdditionalOutputs.c_str()));
+        defineList.emplace(L"ADDITIONAL_TRANSLUCENT_OUTPUTS", m_OptionalTransparencyOptions.OptionalAdditionalOutputs.c_str());
 
     if (!m_OptionalTransparencyOptions.OptionalAdditionalExports.empty())
-        defineList.insert(std::make_pair(L"ADDITIONAL_TRANSLUCENT_EXPORTS", m_OptionalTransparencyOptions.OptionalAdditionalExports.c_str()));
+        defineList.emplace(L"ADDITIONAL_TRANSLUCENT_EXPORTS", m_OptionalTransparencyOptions.OptionalAdditionalExports.c_str());
 
-    defineList.insert(std::make_pair(L"TRANS_ALL_TEXTURES_INDEX", L"t" + std::to_wstring(3 + MAX_SHADOW_MAP_TEXTURES_COUNT)));
-    defineList.insert(std::make_pair(L"HAS_WORLDPOS", L""));
+    defineList.emplace(L"TRANS_ALL_TEXTURES_INDEX", L"t" + std::to_wstring(3 + MAX_SHADOW_MAP_TEXTURES_COUNT));
+    defineList.emplace(L"HAS_WORLDPOS", L"");
 
     // Get the defines for attributes that make up the surface vertices
     Surface::GetVertexAttributeDefines(usedAttributes, defineList);
@@ -926,7 +925,7 @@ uint32_t TranslucencyRenderModule::CreatePipelineObject(const Surface* pSurface)
     {
         // Check if the attribute is present
         if (usedAttributes & (0x1 << attribute))
-            vertexAttributes.push_back(InputLayoutDesc(static_cast<VertexAttributeType>(attribute), pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).ResourceDataFormat, static_cast<uint32_t>(vertexAttributes.size()), 0));
+            vertexAttributes.emplace_back(static_cast<VertexAttributeType>(attribute), pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).ResourceDataFormat, static_cast<uint32_t>(vertexAttributes.size()), 0);
     }
     psoDesc.AddInputLayout(vertexAttributes);
 

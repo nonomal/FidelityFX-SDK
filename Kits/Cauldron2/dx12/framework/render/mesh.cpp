@@ -86,7 +86,7 @@ namespace cauldron
         for (uint32_t i = 0; i < static_cast<uint32_t>(VertexAttributeType::Count); ++i)
         {
             if (attributes & (0x1 << i))
-                defines.insert(std::make_pair(s_DefineString[i], L"1"));
+                defines.emplace(s_DefineString[i], L"1");
         }
     }
 

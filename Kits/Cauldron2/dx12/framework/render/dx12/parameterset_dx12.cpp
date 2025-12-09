@@ -164,7 +164,7 @@ namespace cauldron
         // Add an entry
         CauldronAssert(ASSERT_CRITICAL, m_Current32BitMemOffset + numEntries < MAX_PUSH_CONSTANTS_ENTRIES, L"Out of memory to store root 32-bit constants. Please grow MAX_32BIT_ENTRIES constant in parameterset_dx12.h");
         memcpy(&m_Root32BitMem[m_Current32BitMemOffset], pConstData, sizeof(uint32_t) * numEntries);
-        m_Root32BitEntries.push_back(std::make_pair(key, &m_Root32BitMem[m_Current32BitMemOffset]));
+        m_Root32BitEntries.emplace_back(key, &m_Root32BitMem[m_Current32BitMemOffset]);
         m_Current32BitMemOffset += numEntries;
     }
 

@@ -26,7 +26,7 @@
 #include "../../../shaders/shadercommon.h"
 #include "../../../shaders/uicommon.h"
 
-#include "../../../libs/imgui/imgui.h"
+#include "../../../../../../OpenSource/imgui/imgui.h"
 
 namespace cauldron
 {
@@ -81,6 +81,10 @@ namespace cauldron
 
         void UpdateMagnifierParams();
         void Render(CommandList* pCmdList, const ResourceViewInfo* pRTViewInfo, RenderParams* params);
+            /**
+         * @brief ClearRenderTarget() on render targets that may not be written to before being read. Called by the framework when the resolution changes.
+         */
+        void OnResize(const cauldron::ResolutionInfo& resInfo) override;
 
     private:
 
@@ -128,6 +132,8 @@ namespace cauldron
 
         bool                        m_bCopyHudLessTexture       = false;
         bool                        m_bRenderToTexture          = false;
+
+        bool                        m_bShouldClearRenderTargets = true;
     };
 
 } // namespace cauldron

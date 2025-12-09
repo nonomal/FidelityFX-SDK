@@ -26,6 +26,8 @@
 #include <cauldron2/dx12/framework/misc/fileio.h>
 #include <cauldron2/dx12/rendermodules/rendermoduleregistry.h>
 #include <cauldron2/dx12/framework/render/rendermodule.h>
+#include <cauldron2/dx12/framework/core/inputmanager.h>
+#include <cauldron2/dx12/framework/core/win/framework_win.h>
 
 using namespace cauldron;
 
@@ -84,7 +86,37 @@ void Sample::DoSampleInit()
 // This is called prior to components/render module updates
 void Sample::DoSampleUpdates(double deltaTime)
 {
+    const InputState& inputState = GetInputManager()->GetInputState();
+    FSRApiRenderModule* pFSR = dynamic_cast<FSRApiRenderModule*>(GetFramework()->GetRenderModule("FSRApiRenderModule"));
+    if (pFSR)
+    {
+        // Upscale method hotkeys
+        constexpr int32_t kUpscalerNative = 0;
+        constexpr int32_t kUpscalerFSRAPI = 1;
 
+        // Scale preset hotkeys
+        constexpr int32_t kScalePresetQuality = 1;
+        constexpr int32_t kScalePresetBalanced = 2;
+        constexpr int32_t kScalePresetPerformance = 3;
+        constexpr int32_t kScalePresetUltraPerformance = 4;
+
+        if (inputState.GetKeyUpState(Key_F9))
+            pFSR->SetUpscaleMethodHotkey(kUpscalerNative);
+        if (inputState.GetKeyUpState(Key_F10))
+            pFSR->SetUpscaleMethodHotkey(kUpscalerFSRAPI);
+        if (inputState.GetKeyUpState(Key_F5))
+            pFSR->SetScalePresetHotkey(kScalePresetQuality);
+        if (inputState.GetKeyUpState(Key_F6))
+            pFSR->SetScalePresetHotkey(kScalePresetBalanced);
+        if (inputState.GetKeyUpState(Key_F7))
+            pFSR->SetScalePresetHotkey(kScalePresetPerformance);
+        if (inputState.GetKeyUpState(Key_F8))
+            pFSR->SetScalePresetHotkey(kScalePresetUltraPerformance);
+        if (inputState.GetKeyUpState(Key_F11))
+            pFSR->SetFrameInterpolationHotkey(true);
+        if (inputState.GetKeyUpState(Key_F12))
+            pFSR->SetFrameInterpolationHotkey(false);
+    }
 }
 
 // Handle any changes that need to occur due to applicate resize

@@ -39,6 +39,9 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Condition="Exists('$(SolutionDir)\$(SolutionName).props')" Project="$(SolutionDir)\$(SolutionName).props" Label="FFX Sample" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -62,7 +65,7 @@
       <PreprocessorDefinitions>_WINDOWS;_DX12;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)framework\libs\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\OpenSource\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -89,8 +92,8 @@ xcopy /y $(ProjectDir)rendermodules\rastershadow\shaders\ $(SolutionDir)$(OutDir
 xcopy /y $(ProjectDir)rendermodules\skydome\shaders\ $(SolutionDir)$(OutDir)shaders\
 xcopy /y $(ProjectDir)rendermodules\taa\shaders\ $(SolutionDir)$(OutDir)shaders\
 xcopy /y $(ProjectDir)rendermodules\translucency\shaders\ $(SolutionDir)$(OutDir)shaders\
-xcopy /y $(ProjectDir)framework\libs\acs\amd_acs_x64.dll $(SolutionDir)$(OutDir)
-xcopy /y $(ProjectDir)framework\libs\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
+xcopy /y $(ProjectDir)..\..\OpenSource\amd\acs\amd_acs_x64.dll $(SolutionDir)$(OutDir)
+xcopy /y $(ProjectDir)..\..\OpenSource\amd\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
 
 </Command>
       <Message>Copying Cauldron2 required files</Message>
@@ -105,7 +108,7 @@ xcopy /y $(ProjectDir)framework\libs\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
       <PreprocessorDefinitions>_WINDOWS;_DX12;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)framework\libs\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\OpenSource\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -134,15 +137,21 @@ xcopy /y $(ProjectDir)rendermodules\rastershadow\shaders\ $(SolutionDir)$(OutDir
 xcopy /y $(ProjectDir)rendermodules\skydome\shaders\ $(SolutionDir)$(OutDir)shaders\
 xcopy /y $(ProjectDir)rendermodules\taa\shaders\ $(SolutionDir)$(OutDir)shaders\
 xcopy /y $(ProjectDir)rendermodules\translucency\shaders\ $(SolutionDir)$(OutDir)shaders\
-xcopy /y $(ProjectDir)framework\libs\acs\amd_acs_x64.dll $(SolutionDir)$(OutDir)
-xcopy /y $(ProjectDir)framework\libs\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
+xcopy /y $(ProjectDir)..\..\OpenSource\amd\acs\amd_acs_x64.dll $(SolutionDir)$(OutDir)
+xcopy /y $(ProjectDir)..\..\OpenSource\amd\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
 
 </Command>
       <Message>Copying Cauldron2 required files</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="framework\core\backend_implementations\backend_interface_dx12.cpp" />
+    <ClCompile Include="..\..\OpenSource\amd\memoryallocator\D3D12MemAlloc.cpp" />
+    <ClCompile Include="..\..\OpenSource\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\..\OpenSource\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_widgets.cpp" />
     <ClCompile Include="framework\core\component.cpp" />
     <ClCompile Include="framework\core\components\animationcomponent.cpp" />
     <ClCompile Include="framework\core\components\cameracomponent.cpp" />
@@ -163,13 +172,6 @@ xcopy /y $(ProjectDir)framework\libs\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
     <ClCompile Include="framework\core\win\framework_win.cpp" />
     <ClCompile Include="framework\core\win\inputmanager_win.cpp" />
     <ClCompile Include="framework\core\win\uibackend_win.cpp" />
-    <ClCompile Include="framework\libs\imgui\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="framework\libs\imgui\imgui.cpp" />
-    <ClCompile Include="framework\libs\imgui\imgui_demo.cpp" />
-    <ClCompile Include="framework\libs\imgui\imgui_draw.cpp" />
-    <ClCompile Include="framework\libs\imgui\imgui_tables.cpp" />
-    <ClCompile Include="framework\libs\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="framework\libs\memoryallocator\D3D12MemAlloc.cpp" />
     <ClCompile Include="framework\misc\corecounts.cpp" />
     <ClCompile Include="framework\misc\fileio.cpp" />
     <ClCompile Include="framework\misc\log.cpp" />
@@ -262,7 +264,14 @@ xcopy /y $(ProjectDir)framework\libs\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework\core\backend_implementations\backend_interface_dx12.h" />
+    <ClInclude Include="..\..\OpenSource\amd\memoryallocator\D3D12MemAlloc.h" />
+    <ClInclude Include="..\..\OpenSource\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="..\..\OpenSource\imgui\imconfig.h" />
+    <ClInclude Include="..\..\OpenSource\imgui\imgui.h" />
+    <ClInclude Include="..\..\OpenSource\imgui\imgui_internal.h" />
+    <ClInclude Include="..\..\OpenSource\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\..\OpenSource\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\..\OpenSource\imgui\imstb_truetype.h" />
     <ClInclude Include="framework\core\backend_interface.h" />
     <ClInclude Include="framework\core\component.h" />
     <ClInclude Include="framework\core\components\animationcomponent.h" />
@@ -285,14 +294,6 @@ xcopy /y $(ProjectDir)framework\libs\ags\amd_ags_x64.dll $(SolutionDir)$(OutDir)
     <ClInclude Include="framework\core\win\framework_win.h" />
     <ClInclude Include="framework\core\win\inputmanager_win.h" />
     <ClInclude Include="framework\core\win\uibackend_win.h" />
-    <ClInclude Include="framework\libs\imgui\backends\imgui_impl_win32.h" />
-    <ClInclude Include="framework\libs\imgui\imconfig.h" />
-    <ClInclude Include="framework\libs\imgui\imgui.h" />
-    <ClInclude Include="framework\libs\imgui\imgui_internal.h" />
-    <ClInclude Include="framework\libs\imgui\imstb_rectpack.h" />
-    <ClInclude Include="framework\libs\imgui\imstb_textedit.h" />
-    <ClInclude Include="framework\libs\imgui\imstb_truetype.h" />
-    <ClInclude Include="framework\libs\memoryallocator\D3D12MemAlloc.h" />
     <ClInclude Include="framework\misc\assert.h" />
     <ClInclude Include="framework\misc\corecounts.h" />
     <ClInclude Include="framework\misc\fileio.h" />

@@ -1,7 +1,7 @@
 // This file is part of the FidelityFX SDK.
 //
 // Copyright (C) 2025 Advanced Micro Devices, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -21,16 +21,26 @@
 // THE SOFTWARE.
 
 #pragma once
-#include "../libs/vectormath/vectormath.hpp"
+#include "../../../../OpenSource/vectormath/vectormath.hpp"
 
-#define CAULDRON_PI     3.141592654f
-#define CAULDRON_2PI    (2.f * CAULDRON_PI)
+namespace math
+{
+    using namespace Vectormath;
+#ifdef VECTORMATH_MODE_SSE
+    using namespace Vectormath::SSE;
+#else
+    using namespace Vectormath::Scalar;
+#endif // VECTORMATH_MODE_SSE
+}
 
-#define CAULDRON_PI2    (CAULDRON_PI / 2.f)
-#define CAULDRON_PI4    (CAULDRON_PI / 4.f)
+#define CAULDRON_PI  3.141592654f
+#define CAULDRON_2PI (2.f * CAULDRON_PI)
 
-#define DEG_TO_RAD(degree)  ((degree) * CAULDRON_PI / 180.f)
-#define RAD_TO_DEG(radian)  ((radian) * 180.f / CAULDRON_PI)
+#define CAULDRON_PI2 (CAULDRON_PI / 2.f)
+#define CAULDRON_PI4 (CAULDRON_PI / 4.f)
+
+#define DEG_TO_RAD(degree) ((degree) * CAULDRON_PI / 180.f)
+#define RAD_TO_DEG(radian) ((radian) * 180.f / CAULDRON_PI)
 
 /// @defgroup CauldronMath Math
 /// Sony VectorMath library wrapper.
@@ -96,7 +106,7 @@ namespace cauldron
     ///
     /// @ingroup CauldronMath
     const Mat4 Perspective(float fovyRadians, float aspect, float zNear, float zFar, bool invertedDepth);
-    
+
     /// Construct an orthographic projection matrix with z in range [0, 1]
     ///
     /// @param [in] left            Left plane.
@@ -177,7 +187,6 @@ namespace cauldron
 #else
         return math::Scalar::minPerElem(vec1, vec2);
 #endif
-
     }
 
     /// Returns a vector composed of per-element maximums
@@ -195,7 +204,14 @@ namespace cauldron
 #else
         return math::Scalar::maxPerElem(vec1, vec2);
 #endif
-
     }
 
-} // namespace cauldron
+    inline bool operator!=(const Vec4& vec1, const Vec4& vec2)
+    {
+        return (vec1.getX() != vec2.getX() ||
+                vec1.getY() != vec2.getY() ||
+                vec1.getZ() != vec2.getZ() ||
+                vec1.getW() != vec2.getW());
+    }
+
+}  // namespace cauldron

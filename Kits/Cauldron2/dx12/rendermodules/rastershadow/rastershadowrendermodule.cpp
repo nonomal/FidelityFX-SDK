@@ -474,7 +474,7 @@ uint32_t RasterShadowRenderModule::GetPipelinePermutationID(const Surface* pSurf
     {
         if (pMaterial->HasPBRMetalRough())
         {
-            defineList.insert(std::make_pair(L"MATERIAL_METALLICROUGHNESS", L""));
+            defineList.emplace(L"MATERIAL_METALLICROUGHNESS", L"");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Albedo, L"ID_albedoTexture", L"ID_albedoTexCoord");
             AddTextureToDefineList(defineList,
                 usedAttributes,
@@ -486,7 +486,7 @@ uint32_t RasterShadowRenderModule::GetPipelinePermutationID(const Surface* pSurf
         }
         else if (pMaterial->HasPBRSpecGloss())
         {
-            defineList.insert(std::make_pair(L"MATERIAL_SPECULARGLOSSINESS", L""));
+            defineList.emplace(L"MATERIAL_SPECULARGLOSSINESS", L"");
             AddTextureToDefineList(defineList, usedAttributes, surfaceAttributes, pMaterial, TextureClass::Albedo, L"ID_albedoTexture", L"ID_albedoTexCoord");
             AddTextureToDefineList(defineList,
                 usedAttributes,
@@ -500,18 +500,18 @@ uint32_t RasterShadowRenderModule::GetPipelinePermutationID(const Surface* pSurf
 
     if (pMaterial->GetBlendMode() != MaterialBlend::Opaque)
     {
-        defineList.insert(std::make_pair(L"DEF_alphaMode_MASK", L""));
+        defineList.emplace(L"DEF_alphaMode_MASK", L"");
 
         if (pMaterial->GetBlendMode() == MaterialBlend::Mask)
         {
-            defineList.insert(std::make_pair(L"DEF_alphaCutoff", std::to_wstring(pMaterial->GetAlphaCutOff())));
+            defineList.emplace(L"DEF_alphaCutoff", std::to_wstring(pMaterial->GetAlphaCutOff()));
         }
         else if (pMaterial->GetBlendMode() == MaterialBlend::AlphaBlend)
         {
-            defineList.insert(std::make_pair(L"DEF_alphaCutoff", L"0.99"));
+            defineList.emplace(L"DEF_alphaCutoff", L"0.99");
         }
     }
-    defineList.insert(std::make_pair(L"NO_WORLDPOS", L"")); // no need for the vert4ext shader to output world pos
+    defineList.emplace(L"NO_WORLDPOS", L""); // no need for the vert4ext shader to output world pos
 
     // Get the defines for attributes that make up the surface vertices
     Surface::GetVertexAttributeDefines(usedAttributes, defineList);
@@ -551,7 +551,7 @@ uint32_t RasterShadowRenderModule::GetPipelinePermutationID(const Surface* pSurf
     {
         // Check if the attribute is present
         if (usedAttributes & 0x1 << attribute)
-            vertexAttributes.push_back(InputLayoutDesc(static_cast<VertexAttributeType>(attribute), pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).ResourceDataFormat, (uint32_t)vertexAttributes.size(), 0));
+            vertexAttributes.emplace_back(static_cast<VertexAttributeType>(attribute), pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).ResourceDataFormat, (uint32_t)vertexAttributes.size(), 0);
     }
     psoDesc.AddInputLayout(vertexAttributes);
 

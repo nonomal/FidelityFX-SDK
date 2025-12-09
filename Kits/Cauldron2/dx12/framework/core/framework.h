@@ -70,9 +70,33 @@ using json = nlohmann::ordered_json;
 #include <unordered_set>
 #include <xstring>
 #include <functional>
+#include <mutex>
 
 namespace cauldron
 {
+    extern std::mutex g_FGContextMutex; // Guards access to frame generation context (m_FrameGenContext)
+
+    /**
+     * @struct FGContextScopeLock
+     *
+	 * RAII helper for optional locking of FG context mutex.
+     *
+     * @ingroup CauldronCore
+     */
+    struct FGContextScopeLock
+    {
+        explicit FGContextScopeLock(bool doLock) : m_locked(doLock)
+        {
+            if (m_locked) g_FGContextMutex.lock();
+        }
+        ~FGContextScopeLock()
+        {
+            if (m_locked) g_FGContextMutex.unlock();
+        }
+    private:
+        bool m_locked;
+    };
+
     /**
      * @struct RenderResourceInformation
      *
@@ -233,14 +257,14 @@ namespace cauldron
         const wchar_t* GetAliasedResourceName(const wchar_t* resourceName) const;
         RenderResourceInformation GetRenderResourceInformation(const wchar_t* resourceName) const;
 
-        const bool IsAnyInCodeCaptureEnabled() const { return EnablePixCapture; }
+        bool IsAnyInCodeCaptureEnabled() const { return EnablePixCapture; }
 
     private:
         friend class Framework;   // Only the framework parser can modify render resources/modules directly
 
         // Render resources
-        std::map<std::wstring, RenderResourceInformation> RenderResources        = {};
-        std::map<std::wstring, std::wstring>              RenderResourceMappings = {};
+        std::map<std::wstring, RenderResourceInformation, std::less<>> RenderResources        = {};
+        std::map<std::wstring, std::wstring, std::less<>>              RenderResourceMappings = {};
 
         // Render modules
         std::vector<RenderModuleInfo> RenderModules = {};
@@ -585,9 +609,34 @@ namespace cauldron
          */
         bool UpscalerEnabled() const { return m_UpscalerEnabled; }
 
+        /**
+         * @brief   Set whether frame interpolation has been enabled.
+         */
         void EnableFrameInterpolation(bool enabled);
         
+        /**
+         * @brief   Query if frame interpolation is enabled.
+		 */
         bool FrameInterpolationEnabled() const { return m_FrameInterpolationEnabled; }
+
+        /**
+         * @brief   Set whether swapchain use frame generation callback.
+         */
+        void EnableSwapchainFrameGenerationCallback(bool enabled) { m_SwapchainUsingFrameGenerationCallback = enabled; }
+
+        /**
+		 * @brief   Query if the proxy swapchain use frame generation callback.
+         */
+        bool IsSwapchainUsingFrameGenerationCallback() const { return m_SwapchainUsingFrameGenerationCallback; }
+
+        /**
+         * @brief   Sets whether the swapchain is the proxy swapchain or DXGI swapchain (false)
+         */
+        void EnableFrameGenerationSwapchain(bool enabled) { m_IsFrameGenerationSwapchain = enabled; }
+        /**
+         * @brief   Query to return true if using proxy swapchain or DXGI swapchain.
+         */
+        bool IsFrameGenerationSwapchain() const { return m_IsFrameGenerationSwapchain; }
 
         /**
          * @brief   Overrides the default tonemapper.
@@ -725,6 +774,8 @@ namespace cauldron
         ResolutionUpdateFunc    m_ResolutionUpdaterFn = nullptr;
         bool                    m_UpscalerEnabled = false;
         bool                    m_FrameInterpolationEnabled = false;
+        bool                    m_SwapchainUsingFrameGenerationCallback = false;
+        bool                    m_IsFrameGenerationSwapchain = false;
         std::atomic_bool        m_Running = false;
         FrameCaptureState       m_PixCaptureState       = FrameCaptureState::None;
 

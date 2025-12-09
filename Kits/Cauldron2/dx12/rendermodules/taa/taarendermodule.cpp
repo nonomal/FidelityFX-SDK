@@ -245,7 +245,7 @@ void TAARenderModule::InitTaa()
         bool invertedDepth = GetFramework()->GetConfig()->InvertedDepth;
         if (invertedDepth)
         {
-            defineList.insert(std::make_pair(L"INVERTED_DEPTH", L"1"));
+            defineList.emplace(L"INVERTED_DEPTH", L"1");
         }
         ShaderBuildDesc computeDesc = ShaderBuildDesc::Compute(shaderPath.c_str(), L"MainCS", ShaderModel::SM6_0, &defineList);
         psoDesc.AddShaderDesc(computeDesc);

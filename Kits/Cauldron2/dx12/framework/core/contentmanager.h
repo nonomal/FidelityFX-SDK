@@ -136,7 +136,7 @@ namespace cauldron
         /**
          * @brief   Fetches the requested texture. Returns nullptr if texture isn't found.
          */
-        const Texture* GetTexture(std::wstring contentName);
+        const Texture* GetTexture(const std::wstring& contentName);
 
         /**
          * @brief   Tells the content manager it can start managing a <c><i>ContentBlock</i></c> once it's been
@@ -147,7 +147,7 @@ namespace cauldron
         /**
          * @brief   Unloads previously loaded content (texture or <c><i>ContentBlock</i></c>).
          */
-        void UnloadContent(std::wstring contentName);
+        void UnloadContent(const std::wstring& contentName);
 
         /**
          * @brief   Manages the loading state of content as it flows through loading and unloading.

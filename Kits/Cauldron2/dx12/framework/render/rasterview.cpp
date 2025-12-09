@@ -107,7 +107,7 @@ namespace cauldron
             if (!foundResource)
             {
                 std::vector<RasterView*> rasterViews = { pView };
-                m_AllocatedRasterViews.push_back(std::make_pair(pTex, std::move(rasterViews)));
+                m_AllocatedRasterViews.emplace_back(pTex, std::move(rasterViews));
             }
         }
 

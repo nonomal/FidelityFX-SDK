@@ -161,7 +161,7 @@ namespace cauldron
             col3);
     }
 
-    void VisitNodeRecursive(int index, const json& nodes, const Matrix4 parentTransform, std::vector<cauldron::EntityDataBlock*>& entityDataBlocks, std::vector<bool>& visited)
+    void VisitNodeRecursive(int index, const json& nodes, Matrix4 parentTransform, std::vector<cauldron::EntityDataBlock*>& entityDataBlocks, std::vector<bool>& visited)
     {
         // update transform
         Matrix4 transform = entityDataBlocks[index]->pEntity->GetTransform();
@@ -491,7 +491,7 @@ namespace cauldron
                     filesystem::path filePath = filePathString + StringToWString(uriName);
 
                     // Push the load info
-                    texLoadInfo.push_back(TextureLoadInfo(filePath, textureSRGBMap[i]));
+                    texLoadInfo.emplace_back(filePath, textureSRGBMap[i]);
                 }
 
                 // Load all the textures in the background
@@ -847,10 +847,13 @@ namespace cauldron
             info.ResourceDataFormat = ResourceDataFormat(info.AttributeDataFormat, resourceFormatType);
 
             // Original buffer validation
-                BufferViewInfo bufferViewInfo = GetBufferInfo(accessor, bufferViews);
+            BufferViewInfo bufferViewInfo = GetBufferInfo(accessor, bufferViews);
 
-            if (strcmp(attributeName, "JOINTS_0") == 0)
+            const bool jointsAttributeName = (strcmp(attributeName, "JOINTS_0") == 0) || (strcmp(attributeName, "JOINTS_1") == 0);
+            if (jointsAttributeName)
+            {
                 stride = static_cast<uint32_t>(bufferViewInfo.Stride);
+            }
 
             // Only support tightly packed data
             CauldronAssert(ASSERT_WARNING, bufferViewInfo.Stride == 0 || bufferViewInfo.Stride == stride, L"Stride doesn't match between the type of the accessor and the type of the vertex attribute.");
@@ -867,7 +870,7 @@ namespace cauldron
             data += bufferViewInfo.Offset + byteOffset;
 
             // Verify that the component is already using floats or allowed to be converted to floats
-            if (!(strcmp(attributeName, "JOINTS_0") == 0 || strcmp(attributeName, "JOINTS_1")))
+            if (jointsAttributeName == false)
             {
                 CauldronAssert(ASSERT_ERROR, (resourceFormatType == g_GLTFComponentType_Float) || forceConversionToFloat, L"Unsupported component type for vertex attribute.");
             }
@@ -1321,7 +1324,7 @@ namespace cauldron
         pGLTFData->BufferCV.notify_one();
     }
 
-    void GLTFLoader::BuildBLAS(std::vector<Mesh*> meshes)
+    void GLTFLoader::BuildBLAS(const std::vector<Mesh*>& meshes)
     {
         std::vector<CommandList*> cmdLists(1);
         cmdLists[0] = GetDevice()->CreateCommandList(L"Build BLAS cmdList", CommandQueue::Graphics);
@@ -1569,7 +1572,7 @@ namespace cauldron
 
 
                 // Add animation component (if present)
-                if (AnimationComponentMgr::Get != nullptr && pGLTFData->pLoadedContentRep->Animations.size() > 0)
+                if (AnimationComponentMgr::Get() != nullptr && pGLTFData->pLoadedContentRep->Animations.size() > 0)
                 {
                     bool isSkiningTarget = node.find("skin") != node.end();
 
@@ -1660,7 +1663,7 @@ namespace cauldron
             }
 
             // Update the component manager with skinning information
-            if (AnimationComponentMgr::Get != nullptr && pGLTFData->pLoadedContentRep->Animations.size() > 0)
+            if (AnimationComponentMgr::Get() != nullptr && pGLTFData->pLoadedContentRep->Animations.size() > 0)
             {
                 const auto& skins = pGLTFData->pLoadedContentRep->Skins;
 

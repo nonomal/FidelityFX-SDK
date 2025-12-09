@@ -206,15 +206,15 @@ namespace cauldron
 
     const Texture* ShadowMapResourcePool::GetRenderTarget(uint32_t index)
     {
-        if (index >= 0)
+        std::lock_guard<std::mutex> lock(m_CriticalSection);
+        if (index < (uint32_t)m_ShadowMapAtlases.size())
         {
-            std::lock_guard<std::mutex> lock(m_CriticalSection);
-            if (index < (uint32_t)m_ShadowMapAtlases.size())
-            {
-                return m_ShadowMapAtlases[index]->GetRenderTarget();
-            }
+            return m_ShadowMapAtlases[index]->GetRenderTarget();
         }
-        return nullptr;
+        else
+        {
+            return nullptr;
+        }
     }
 
     ShadowMapResourcePool::ShadowMapView ShadowMapResourcePool::GetNewShadowMap(ShadowMapResolution resolution)

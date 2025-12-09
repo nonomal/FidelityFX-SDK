@@ -34,7 +34,7 @@
 #ifndef D3D12MA_USING_DIRECTX_HEADERS
 #define D3D12MA_USING_DIRECTX_HEADERS
 #endif // #ifndef D3D12MA_USING_DIRECTX_HEADERS
-#include "../../libs/memoryallocator/D3D12MemAlloc.h"
+#include "../../../../../OpenSource/amd/memoryallocator/D3D12MemAlloc.h"
 #include <directx/d3dx12.h>
 
 namespace cauldron

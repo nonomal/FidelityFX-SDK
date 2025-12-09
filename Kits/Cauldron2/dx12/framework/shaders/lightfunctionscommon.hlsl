@@ -154,10 +154,17 @@ float MicrofacetDistribution_Trowbridge(MaterialInfo materialInfo, AngularInfo a
     return alphaRoughnessSq / (M_PI * f * f + 0.000001f);
 }
 
-float3 GetPointShade(float3 pointToLight, MaterialInfo materialInfo, float3 normal, float3 view)
+struct SplitShadingResult
+{
+    float3 diffuse;
+    float3 specular;
+};
+
+SplitShadingResult GetPointShade(float3 pointToLight, MaterialInfo materialInfo, float3 normal, float3 view)
 {
     AngularInfo angularInfo = GetAngularInfo(pointToLight, normal, view);
 
+    SplitShadingResult result = (SplitShadingResult)0;
     if (angularInfo.NdotL > 0.0 || angularInfo.NdotV > 0.0)
     {
         // Calculate the shading terms for the microfacet specular shading model
@@ -170,10 +177,11 @@ float3 GetPointShade(float3 pointToLight, MaterialInfo materialInfo, float3 norm
         float3 specContrib = F * Vis * D;
 
         // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-        return angularInfo.NdotL * (diffuseContrib + specContrib);
+        result.diffuse = angularInfo.NdotL * diffuseContrib;
+        result.specular = angularInfo.NdotL * specContrib;
     }
 
-    return float3(0.0, 0.0, 0.0);
+    return result;
 }
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
@@ -201,7 +209,24 @@ float GetSpotAttenuation(float3 pointToLight, float3 spotDirection, float outerC
     return 0.0;
 }
 
-float3 ApplyDirectionalLight(LightInformation light, MaterialInfo materialInfo, float3 normal, float3 view)
+struct LightingResult
+{
+    float3 diffuse;
+    float3 specular;
+
+    void Add(LightingResult other)
+    {
+        diffuse += other.diffuse;
+        specular += other.specular;
+    }
+    
+    float3 GetComposed()
+    {
+        return diffuse + specular;
+    }
+};
+
+LightingResult ApplyDirectionalLight(LightInformation light, MaterialInfo materialInfo, float3 normal, float3 view)
 {
     float3 pointToLight = light.DirectionRange.xyz;
 
@@ -212,11 +237,16 @@ float3 ApplyDirectionalLight(LightInformation light, MaterialInfo materialInfo, 
     }
 #endif
 
-    float3 shade = GetPointShade(pointToLight, materialInfo, normal, view);
-    return light.ColorIntensity.rgb * light.ColorIntensity.a * shade;
+    float3 lightIntensity = light.ColorIntensity.rgb * light.ColorIntensity.a;
+    SplitShadingResult shadingResult = GetPointShade(pointToLight, materialInfo, normal, view);
+    
+    LightingResult lightingResult = (LightingResult)0;
+    lightingResult.diffuse = lightIntensity * shadingResult.diffuse;
+    lightingResult.specular = lightIntensity * shadingResult.specular;
+    return lightingResult;
 }
 
-float3 ApplyPointLight(LightInformation light, MaterialInfo materialInfo, float3 normal, float3 worldPos, float3 view)
+LightingResult ApplyPointLight(LightInformation light, MaterialInfo materialInfo, float3 normal, float3 worldPos, float3 view)
 {
     float3 pointToLight = light.PosDepthBias.xyz - worldPos;
     float distance = length(pointToLight);
@@ -227,7 +257,7 @@ float3 ApplyPointLight(LightInformation light, MaterialInfo materialInfo, float3
     // Early out if we're out of range of the light.
     if( distance > light.DirectionRange.w )
     {
-        return float3(0.0f, 0.0f, 0.0f);
+        return (LightingResult)0;
     }
 
 #if (DEF_doubleSided == 1)
@@ -238,11 +268,16 @@ float3 ApplyPointLight(LightInformation light, MaterialInfo materialInfo, float3
 #endif
 
     float attenuation = GetRangeAttenuation(light.DirectionRange.w, distance);
-    float3 shade = GetPointShade(pointToLight, materialInfo, normal, view);
-    return attenuation * light.ColorIntensity.rgb * light.ColorIntensity.a * shade;
+    float3 lightIntensity = attenuation * light.ColorIntensity.rgb * light.ColorIntensity.a;
+    SplitShadingResult shadingResult = GetPointShade(pointToLight, materialInfo, normal, view);
+    
+    LightingResult lightingResult = (LightingResult)0;
+    lightingResult.diffuse = lightIntensity * shadingResult.diffuse;
+    lightingResult.specular = lightIntensity * shadingResult.specular;
+    return lightingResult;
 }
 
-float3 ApplySpotLight(LightInformation light, MaterialInfo materialInfo, float3 normal, float3 worldPos, float3 view)
+LightingResult ApplySpotLight(LightInformation light, MaterialInfo materialInfo, float3 normal, float3 worldPos, float3 view)
 {
     float3 pointToLight = light.PosDepthBias.xyz - worldPos;
     float distance = length(pointToLight);
@@ -259,28 +294,33 @@ float3 ApplySpotLight(LightInformation light, MaterialInfo materialInfo, float3 
 
     float rangeAttenuation = GetRangeAttenuation(light.DirectionRange.w, distance);
     float spotAttenuation = GetSpotAttenuation(pointToLight, -light.DirectionRange.xyz, light.OuterConeCos, light.InnerConeCos);
-    float3 shade = GetPointShade(pointToLight, materialInfo, normal, view);
-    return rangeAttenuation * spotAttenuation * light.ColorIntensity.rgb * light.ColorIntensity.a * shade;
+    float3 lightIntensity = rangeAttenuation * spotAttenuation * light.ColorIntensity.rgb * light.ColorIntensity.a;
+    SplitShadingResult shadingResult = GetPointShade(pointToLight, materialInfo, normal, view);
+    
+    LightingResult lightingResult = (LightingResult)0;
+    lightingResult.diffuse = lightIntensity * shadingResult.diffuse;
+    lightingResult.specular = lightIntensity * shadingResult.specular;
+    return lightingResult;
 }
 
-float3 ApplyPunctualLight(in float3 worldPos, in float3 normal, in float3 view, in MaterialInfo materialInfo, in LightInformation lightInfo)
+LightingResult ApplyPunctualLight(in float3 worldPos, in float3 normal, in float3 view, in MaterialInfo materialInfo, in LightInformation lightInfo)
 {
-    float3 color = float3(0.0, 0.0, 0.0);
+    LightingResult result = (LightingResult)0;
 
     if (lightInfo.Type == 0 /* LightType::Directional */)
     {
-        color = ApplyDirectionalLight(lightInfo, materialInfo, normal, view);
+        result = ApplyDirectionalLight(lightInfo, materialInfo, normal, view);
     }
     else if (lightInfo.Type == 2 /* LightType::Point */)
     {
-        color = ApplyPointLight(lightInfo, materialInfo, normal, worldPos, view);
+        result = ApplyPointLight(lightInfo, materialInfo, normal, worldPos, view);
     }
     else if (lightInfo.Type == 1 /* LightType::Spot */)
     {
-        color = ApplySpotLight(lightInfo, materialInfo, normal, worldPos, view);
+        result = ApplySpotLight(lightInfo, materialInfo, normal, worldPos, view);
     }
 
-    return color;
+    return result;
 }
 
 // Lighting

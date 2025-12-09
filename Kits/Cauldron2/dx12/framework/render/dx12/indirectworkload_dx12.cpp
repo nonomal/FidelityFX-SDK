@@ -31,12 +31,12 @@
 
 namespace cauldron
 {
-    IndirectWorkload* IndirectWorkload::CreateIndirectWorkload(const IndirectCommandType& type)
+    IndirectWorkload* IndirectWorkload::CreateIndirectWorkload(IndirectCommandType type)
     {
         return new IndirectWorkloadInternal(type);
     }
 
-    IndirectWorkloadInternal::IndirectWorkloadInternal(const IndirectCommandType& type)
+    IndirectWorkloadInternal::IndirectWorkloadInternal(IndirectCommandType type)
         : m_type(type)
     {
         D3D12_INDIRECT_ARGUMENT_DESC argumentDescs = {};

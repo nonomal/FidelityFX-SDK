@@ -83,15 +83,9 @@ namespace cauldron
                 pFileBuffer += bytesReceivedOrStatus;
             }
 
-            // Going past eof... not good
-            else if (bytesReceivedOrStatus == 0)
-            {
-                (void)_close(file);
-                return -1;
-            }
-
-            // Error reported during read
-            else if (bytesReceivedOrStatus < 0)
+            // bytesReceivedOrStatus == 0: going past eof... not good
+            // bytesReceivedOrStatus <  0: error reported during read
+            else
             {
                 (void)_close(file);
                 return -1;
@@ -158,15 +152,9 @@ namespace cauldron
                 pFileBuffer += bytesReceivedOrStatus;
             }
 
-            // Going past eof... not good
-            else if (bytesReceivedOrStatus == 0)
-            {
-                (void)_close(file);
-                return -1;
-            }
-
-            // Error reported during read
-            else if (bytesReceivedOrStatus < 0)
+            // bytesReceivedOrStatus == 0: going past eof... not good
+            // bytesReceivedOrStatus <  0: error reported during read
+            else
             {
                 (void)_close(file);
                 return -1;

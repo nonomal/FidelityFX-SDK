@@ -196,7 +196,7 @@ namespace cauldron
 
         // Create the source code blob
         ComPtr<IDxcBlobEncoding>    pSourceCode;
-        CauldronThrowOnFail(pUtils->CreateBlob(shaderCode.c_str(), static_cast<UINT32>(wcslen(shaderCode.c_str()) * sizeof(wchar_t)), DXC_CP_UTF16, &pSourceCode));
+        CauldronThrowOnFail(pUtils->CreateBlob(shaderCode.c_str(), static_cast<UINT32>(shaderCode.length() * sizeof(wchar_t)), DXC_CP_UTF16, &pSourceCode));
 
         // Put together the arguments (Note that defines are already rolled into the source)
         std::vector<LPCWSTR> arguments;
@@ -324,7 +324,7 @@ namespace cauldron
         if (pErrors && pErrors->GetStringLength() > 0)
         {
             std::string errorString = pErrors->GetStringPointer();
-            std::wstring errorWString = StringToWString(errorString.c_str());
+            std::wstring errorWString = StringToWString(errorString);
             CauldronCritical(L"%ls : %ls", (shaderFile)? filePath.c_str() : L"ShaderCodeString", errorWString.c_str());
             return nullptr;
         }

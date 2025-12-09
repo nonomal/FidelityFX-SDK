@@ -157,7 +157,7 @@ namespace cauldron
         return results.second;
     }
 
-    const Texture* ContentManager::GetTexture(std::wstring contentName)
+    const Texture* ContentManager::GetTexture(const std::wstring& contentName)
     {
         CauldronAssert(ASSERT_ERROR, std::this_thread::get_id() != GetFramework()->MainThreadID() || !GetFramework()->IsRunning(), L"Performance Warning: Using std::map::find on the main thread while app is running.");
         std::lock_guard<std::mutex>    lock(m_ContentChangeMutex);
@@ -190,7 +190,7 @@ namespace cauldron
         return results.second;
     }
 
-    void ContentManager::UnloadContent(std::wstring contentName)
+    void ContentManager::UnloadContent(const std::wstring& contentName)
     {
         // lock to delete the block
         std::lock_guard<std::mutex> lock(m_ContentChangeMutex);

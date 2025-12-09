@@ -166,7 +166,8 @@ namespace cauldron
         // Update global transforms (process the hierarchy)
         for (auto& component : m_ManagedComponents)
         {
-            const auto& parent = component->GetOwner()->GetParent();
+            const auto  owner  = component->GetOwner();
+            const auto& parent = owner->GetParent();
             const auto& data   = static_cast<const AnimationComponent*>(component)->GetData();
 
             Mat4 parentTransform = parent == nullptr ? Mat4::identity() : parent->GetTransform();
@@ -182,8 +183,8 @@ namespace cauldron
                 globalTransform = static_cast<AnimationComponent*>(component)->GetLocalTransform();
             }
 
-            component->GetOwner()->SetPrevTransform(component->GetOwner()->GetTransform());
-            component->GetOwner()->SetTransform(globalTransform);
+            owner->SetPrevTransform(owner->GetTransform());
+            owner->SetTransform(globalTransform);
         }
 
 

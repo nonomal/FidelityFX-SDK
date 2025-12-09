@@ -121,9 +121,7 @@ namespace cauldron
             memcpy(m_static, other.m_static, m_length * sizeof(wchar_t));
     }
 
-    MessageBuffer::~MessageBuffer()
-    {
-    }
+    MessageBuffer::~MessageBuffer() = default;
 
     MessageBuffer& MessageBuffer::operator=(MessageBuffer&& other) noexcept
     {
@@ -329,7 +327,7 @@ namespace cauldron
         {
             size_t index = (m_messageStartIndex + i) % s_MAX_SAVED_MESSAGES;
             if (((int32_t)m_messagesRingBuffer[index].Level() & flags) != 0)
-                messages.push_back(LogMessageEntry(m_messagesRingBuffer[index].Level(), m_messagesRingBuffer[index].Time(), m_messagesRingBuffer[index].Data()));
+                messages.emplace_back(m_messagesRingBuffer[index].Level(), m_messagesRingBuffer[index].Time(), m_messagesRingBuffer[index].Data());
         }
     }
 

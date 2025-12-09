@@ -41,8 +41,8 @@ namespace cauldron
         const cauldron::TextureInfo* pTextureInfo = pMaterial->GetTextureInfo(textureClass);
         if (pTextureInfo != nullptr)
         {
-            defineList.insert(std::make_pair(pTextureKey, L""));
-            defineList.insert(std::make_pair(pTexCoordKey, std::to_wstring(pTextureInfo->UVSet)));
+            defineList.emplace(pTextureKey, L"");
+            defineList.emplace(pTexCoordKey, std::to_wstring(pTextureInfo->UVSet));
 
             // add the attribute if the surface has it
             switch (pTextureInfo->UVSet)

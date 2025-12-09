@@ -56,7 +56,7 @@
         },
 
         "FontSize": 13,
-        "AGSEnabled": false,
+        "AGSEnabled": true,
         "AntiLag2": true,
         "StablePowerState": false,
         "InvertedDepth": true,

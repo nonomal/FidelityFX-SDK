@@ -41,7 +41,7 @@ namespace cauldron
         PipelineObjectInternal(const wchar_t* pipelineObjectName);
         virtual ~PipelineObjectInternal() = default;
 
-        void Build(const PipelineDesc& Desc, std::vector<const wchar_t*>* pAdditionalParameters = nullptr) override;
+        void Build(PipelineDesc&& desc, std::vector<const wchar_t*>* pAdditionalParameters = nullptr) override;
 
     private:
         // Internal members

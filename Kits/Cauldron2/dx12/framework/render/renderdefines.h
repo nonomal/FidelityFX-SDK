@@ -214,6 +214,7 @@ namespace cauldron
         R8_UINT,            ///< Single-component (R) 8-bit (unsigned int) type.
         R8_TYPELESS,        ///< Single-component (R) 8-bit (typeless) type.
         R8_UNORM,           ///< Single-component (R) 8-bit (unsigned normalized) type.
+        R8_SNORM,           ///< Single-component (R) 8-bit (signed normalized) type.
 
         // 16-bit
         R16_SINT,           ///< Single-component (R) 16-bit (signed int) type.

@@ -31,6 +31,7 @@
 #include "../../framework/core/scene.h"
 #include "../../framework/core/uimanager.h"
 #include "../../framework/shaders/surfacerendercommon.h"
+#include "../../framework/render/rasterview.h"
 
 using namespace cauldron;
 using namespace std::experimental;
@@ -93,7 +94,6 @@ void LightingRenderModule::Init(const json& initData)
         SamplerDesc irradianceCubeSampler;
         irradianceCubeSampler.Filter = FilterFunc::MinMagMipPoint;
         irradianceCubeSampler.AddressW = AddressMode::Wrap;
-        irradianceCubeSampler.Filter = FilterFunc::MinMagMipPoint;
         irradianceCubeSampler.MaxAnisotropy = 1;
         samplers.clear();
         samplers.push_back(irradianceCubeSampler);
@@ -105,14 +105,16 @@ void LightingRenderModule::Init(const json& initData)
     m_pRenderTarget = GetFramework()->GetColorTargetForCallback(GetName());
     CauldronAssert(ASSERT_CRITICAL, m_pRenderTarget != nullptr, L"Couldn't find or create the render target of PBRLightingRenderModule.");
 
+    m_pRenderTargetRasterView = GetFramework()->GetRasterViewAllocator()->RequestRasterView(m_pRenderTarget, ViewDimension::Texture2D);
+
     // Setup the pipeline object
     PipelineDesc psoDesc;
     psoDesc.SetRootSignature(m_pRootSignature);
 
     DefineList defineList;
-    defineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
-    defineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
-    defineList.insert(std::make_pair(L"DEF_SSAO", std::to_wstring(1)));
+    defineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
+    defineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
+    defineList.emplace(L"DEF_SSAO", std::to_wstring(1));
 
     // Setup the shaders to build on the pipeline object
     std::wstring shaderPath = L"lighting.hlsl";
@@ -206,8 +208,21 @@ void LightingRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     GPUScopedProfileCapture sampleMarker(pCmdList, L"Lighting");
 
     // Render modules expect resources coming in/going out to be in a shader read state
-    Barrier barrier = Barrier::Transition(m_pRenderTarget->GetResource(), ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource, ResourceState::UnorderedAccess);
-    ResourceBarrier(pCmdList, 1, &barrier);
+    std::vector<Barrier> barriers;
+    barriers.push_back(Barrier::Transition(m_pRenderTarget->GetResource(),
+        ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource,
+        ResourceState::RenderTargetResource));
+    ResourceBarrier(pCmdList, static_cast<uint32_t> (barriers.size()), barriers.data());
+
+    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    ResourceViewInfo viewInfo = m_pRenderTargetRasterView->GetResourceView();
+    ClearRenderTarget(pCmdList, &viewInfo, clearColor);
+
+    barriers.clear();
+    barriers.push_back(Barrier::Transition(m_pRenderTarget->GetResource(),
+        ResourceState::RenderTargetResource,
+        ResourceState::UnorderedAccess));
+    ResourceBarrier(pCmdList, static_cast<uint32_t> (barriers.size()), barriers.data());
 
     // Update necessary scene frame information
     BufferAddressInfo sceneBuffers[2];
@@ -248,6 +263,6 @@ void LightingRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     Dispatch(pCmdList, numGroupX, numGroupY, 1);
 
     // Render modules expect resources coming in/going out to be in a shader read state
-    barrier = Barrier::Transition(m_pRenderTarget->GetResource(), ResourceState::UnorderedAccess, ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource);
+    auto barrier = Barrier::Transition(m_pRenderTarget->GetResource(), ResourceState::UnorderedAccess, ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource);
     ResourceBarrier(pCmdList, 1, &barrier);
 }

@@ -102,9 +102,10 @@ namespace cauldron
             filesystem::path diffPath = GetConfig()->StartupContent.DiffuseIBL;
             filesystem::path brdfPath = L"..\\..\\..\\..\\..\\..\\media\\cauldronmedia\\Textures\\BRDF\\BrdfLut.dds";
             std::vector<TextureLoadInfo> texInfo;
-            texInfo.push_back(TextureLoadInfo(specPath));
-            texInfo.push_back(TextureLoadInfo(diffPath));
-            texInfo.push_back(TextureLoadInfo(brdfPath));
+            texInfo.reserve(3u);
+            texInfo.emplace_back(specPath);
+            texInfo.emplace_back(diffPath);
+            texInfo.emplace_back(brdfPath);
             GetContentManager()->LoadTextures(texInfo, CompletionCallback);
 
             float IBLFactor = GetConfig()->StartupContent.IBLFactor;

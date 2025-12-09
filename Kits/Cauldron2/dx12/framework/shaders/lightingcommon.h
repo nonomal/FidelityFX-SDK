@@ -88,7 +88,8 @@ float3 PBRLighting(in PBRPixelInfo pixelInfo, Texture2D ShadowMapTextures[MAX_SH
             shadowFactor = CalcShadows(pixelInfo.pixelCoordinates.xy, ShadowMapTextures[0]);
         else
             shadowFactor = CalcShadows(pixelInfo.pixelWorldPos.xyz, pixelInfo.pixelNormal.xyz, LightInfo.LightInfo[i], SamShadow, ShadowMapTextures);
-        color += ApplyPunctualLight(pixelInfo.pixelWorldPos.xyz, pixelInfo.pixelNormal.xyz, viewVec, materialInfo, LightInfo.LightInfo[i]) * shadowFactor;
+        LightingResult lightResult = ApplyPunctualLight(pixelInfo.pixelWorldPos.xyz, pixelInfo.pixelNormal.xyz, viewVec, materialInfo, LightInfo.LightInfo[i]);
+        color += lightResult.GetComposed() * shadowFactor;
     }
 
     // Calculate lighting contribution from image based lighting source (IBL)

@@ -137,7 +137,7 @@ void ParallelSort::Init(uint32_t maxEntries, bool bHasPayload, bool bIndirect)
 
             DefineList defineList;
             if (m_bHasPayload)
-                defineList.insert(std::make_pair(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1"));
+                defineList.emplace(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1");
 
             // Setup the shaders to build on the pipeline object
             std::wstring    shaderPath  = L"parallelsort_sum_pass.hlsl";
@@ -170,7 +170,7 @@ void ParallelSort::Init(uint32_t maxEntries, bool bHasPayload, bool bIndirect)
 
             DefineList defineList;
             if (m_bHasPayload)
-                defineList.insert(std::make_pair(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1"));
+                defineList.emplace(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1");
 
             // Setup the shaders to build on the pipeline object
             std::wstring    shaderPath  = L"parallelsort_reduce_pass.hlsl";
@@ -202,7 +202,7 @@ void ParallelSort::Init(uint32_t maxEntries, bool bHasPayload, bool bIndirect)
 
             DefineList defineList;
             if (m_bHasPayload)
-                defineList.insert(std::make_pair(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1"));
+                defineList.emplace(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1");
 
             // Setup the shaders to build on the pipeline object
             std::wstring    shaderPath  = L"parallelsort_scan_pass.hlsl";
@@ -236,7 +236,7 @@ void ParallelSort::Init(uint32_t maxEntries, bool bHasPayload, bool bIndirect)
 
             DefineList defineList;
             if (m_bHasPayload)
-                defineList.insert(std::make_pair(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1"));
+                defineList.emplace(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1");
 
             // Setup the shaders to build on the pipeline object
             std::wstring    shaderPath  = L"parallelsort_scan_add_pass.hlsl";
@@ -275,7 +275,7 @@ void ParallelSort::Init(uint32_t maxEntries, bool bHasPayload, bool bIndirect)
 
             DefineList defineList;
             if (m_bHasPayload)
-                defineList.insert(std::make_pair(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1"));
+                defineList.emplace(L"FFX_PARALLELSORT_OPTION_HAS_PAYLOAD", L"1");
 
             // Setup the shaders to build on the pipeline object
             std::wstring    shaderPath  = L"parallelsort_scatter_pass.hlsl";

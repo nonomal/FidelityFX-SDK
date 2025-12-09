@@ -125,7 +125,7 @@ namespace cauldron
                     if (emplaced)
                     {
                         // Now that the resource is ready, queue the resource change on the graphics queue for the next time it executes
-                        Barrier textureTransition = Barrier::Transition(pNewTexture->GetResource(), ResourceState::CopyDest, ResourceState::PixelShaderResource | ResourceState::NonPixelShaderResource);
+                        Barrier textureTransition = Barrier::Transition(pNewTexture->GetResource(), ResourceState::CommonResource, ResourceState::PixelShaderResource | ResourceState::NonPixelShaderResource);
                         GetDevice()->ExecuteResourceTransitionImmediate(1, &textureTransition);
                     }
 
@@ -515,8 +515,9 @@ namespace cauldron
         }
 
         // read the header
+        constexpr size_t c_HEADER_ALIGNMENT = alignof(uint32_t);
         constexpr int32_t c_HEADER_SIZE = 4 + sizeof(DDS_HEADER) + sizeof(DDS_HEADER_DXT10);
-        char headerData[c_HEADER_SIZE];
+        alignas(c_HEADER_ALIGNMENT) char headerData[c_HEADER_SIZE];
         uint32_t bytesRead = 0;
 
         int64_t sizeRead = ReadFilePartial(textureFile.c_str(), headerData, c_HEADER_SIZE);

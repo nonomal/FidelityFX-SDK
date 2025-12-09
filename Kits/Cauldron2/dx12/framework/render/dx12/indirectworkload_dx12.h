@@ -33,7 +33,7 @@ namespace cauldron
     class IndirectWorkloadInternal final : public IndirectWorkload
     {
     public:
-        IndirectWorkloadInternal(const IndirectCommandType& type);
+        IndirectWorkloadInternal(IndirectCommandType type);
         virtual ~IndirectWorkloadInternal() = default;
 
     private:

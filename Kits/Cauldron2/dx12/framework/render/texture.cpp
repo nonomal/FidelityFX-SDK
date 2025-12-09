@@ -45,7 +45,7 @@ namespace cauldron
 
     Texture* Texture::CreateContentTexture(const TextureDesc* pDesc)
     {
-        return new Texture(pDesc, ResourceState::CopyDest, nullptr);
+        return new Texture(pDesc, ResourceState::CommonResource, nullptr);
     }
 
     Texture::~Texture()

@@ -42,7 +42,7 @@ namespace cauldron
         std::function<void()> pTaskHandler = [this]() { this->TaskExecutor(); };
 
         for (uint32_t i = 0; i < threadPoolSize; ++i)
-            m_ThreadPool.push_back(std::thread(pTaskHandler));
+            m_ThreadPool.emplace_back(pTaskHandler);
 
         return 0;
     }

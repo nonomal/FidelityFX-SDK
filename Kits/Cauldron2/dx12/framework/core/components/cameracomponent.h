@@ -25,6 +25,7 @@
 #include "../component.h"
 #include "../../misc/math.h"
 #include <functional>
+#include <random>
 
 namespace cauldron
 {
@@ -101,6 +102,33 @@ namespace cauldron
     };
 
     /**
+     * @enum CameraAnimation
+     *
+     * Describes the type of camera animation.
+     *
+     * @ingroup CauldronComponent
+     */
+    enum class CameraAnimation
+    {
+        None,                           ///< No camera animation
+        SinusoidalRotation,             ///< A sinusoidal rotation camera
+        CircleRotation                  ///< A circular rotation camera
+    };
+
+    /**
+     * @enum CameraAnimationRotationDirection
+     *
+     * Describes the rotation direction of camera animation.
+     *
+     * @ingroup CauldronComponent
+     */
+    enum class CameraAnimationRotationDirection
+    {
+        Left,        ///< Left rotation direction of animation
+        Right        ///< Right rotation direction of animation
+    };
+
+    /**
      * @struct CameraComponentData
      *
      * Initialization data structure for the <c><i>CameraComponent</i></c>.
@@ -172,18 +200,23 @@ namespace cauldron
         const Vec4& GetCameraTranslation() const { return m_pOwner->GetTransform().getCol3(); }
 
         /**
-        * @brief   Gets the camera's position.
-        */
+         * @brief   Gets the camera's position.
+         */
         const Vec3  GetCameraPos() const { return m_pOwner->GetTransform().getTranslation(); }
 
         /**
-        * @brief   Gets the camera's Up Vector.
-        */
+         * @brief   Gets the camera's previous position.
+         */
+        const Vec3  GetPreviousCameraPos() const { return m_pOwner->GetPrevTransform().getTranslation(); }
+
+        /**
+         * @brief   Gets the camera's Up Vector.
+         */
         const Vec3 GetCameraUp() const { return m_InvViewMatrix.getCol1().getXYZ(); }
 
         /**
-        * @brief   Gets the camera's Right Vector.
-        */
+         * @brief   Gets the camera's Right Vector.
+         */
         const Vec3 GetCameraRight() const { return m_InvViewMatrix.getCol0().getXYZ(); }
 
         /**
@@ -242,14 +275,19 @@ namespace cauldron
         const Mat4& GetPrevProjectionJittered() const { return m_PrevProjJittered; }
 
         /**
+         * @brief   Gets the camera's jitter offsets.
+         */
+        const Vec2& GetJitterOffsets() const { return m_jitterValues; }
+
+        /**
          * @brief   Gets the camera's near plane value.
          */
-        const float GetNearPlane() const;
+        const float GetNearPlane() const { return m_pData->Znear; }
 
         /**
          * @brief   Gets the camera's far plane value.
          */
-        const float GetFarPlane() const;
+        const float GetFarPlane() const { return m_pData->Zfar; }
 
         /**
          * @brief   Gets the camera's horizontal field of view.
@@ -271,6 +309,16 @@ namespace cauldron
          */
         bool WasCameraReset() const { return m_CameraReset; }
 
+        /**
+         * @brief   Sets animation mode and parameters for the camera.
+         */
+        void SetAnimation(CameraAnimation mode, CameraAnimationRotationDirection rotation = CameraAnimationRotationDirection::Left, bool apply_noise = false)
+        {
+            m_AnimationMode = mode;
+            m_AnimationDirection = (rotation == CameraAnimationRotationDirection::Left) ? 1.0f : -1.0f;
+            m_AnimationNoise = apply_noise;
+        }
+
     private:
         CameraComponent() = delete;
 
@@ -287,6 +335,11 @@ namespace cauldron
         void SetProjectionJitteredMatrix();
 
         void OnFocusGained() override;
+
+        float Lerp(float a, float b, float t) {
+            return a + t * (b - a);
+        }
+
 
     protected:
         // After regaining focus, skip next update because the mouse delta will be too large.
@@ -317,6 +370,14 @@ namespace cauldron
         bool            m_Dirty = true;         // Whether or not we need to recalculate everything
         bool            m_ArcBallMode = true;   // Use arc-ball rotation or WASD free cam
         bool            m_CameraReset = false;  // Used to track if the camera was reset throughout the frame
+
+        // Animation settings
+        CameraAnimation m_AnimationMode = CameraAnimation::None;  // Camera animation mode
+        float m_AnimationDirection = 1.0f; // Camera animation rotation direction
+        bool m_AnimationNoise = false; // Camera animation rotation direction
+        float m_AnimationAccumTime = 0.0f;
+        std::default_random_engine generator;
+        float m_PreviousNoise;
 
         // Jitter
         Vec2 m_jitterValues     = Vec2(0, 0);

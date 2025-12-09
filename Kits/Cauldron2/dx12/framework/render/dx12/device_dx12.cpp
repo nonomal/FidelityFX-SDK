@@ -32,7 +32,7 @@
 #include "uploadheap_dx12.h"
 
 #include <directx/d3dx12.h>
-#include "../../libs/antilag2/ffx_antilag2_dx12.h"
+#include "../../../../../OpenSource/amd/antilag2/ffx_antilag2_dx12.h"
 
 #pragma comment(lib, "dxguid.lib")
 #include <DXGIDebug.h>
@@ -49,7 +49,9 @@ namespace cauldron
     {
         MSComPtr<IDXGIDebug1> pDxgiDebug;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDxgiDebug))))
+        {
             pDxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+        }
     }
 
     ShaderModel DXToCauldronShaderModel(D3D_SHADER_MODEL dxSM)
@@ -108,6 +110,12 @@ namespace cauldron
             MSComPtr<ID3D12Debug1> pDebugController1;
             CauldronThrowOnFail(D3D12GetDebugInterface(IID_PPV_ARGS(&pDebugController1)));
 
+            MSComPtr<IDXGIDebug1> pDxgiDebug;
+            if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDxgiDebug))))
+            {
+                pDxgiDebug->EnableLeakTrackingForThread();
+            }
+
             pDebugController1->EnableDebugLayer();    // CPU Only (but also needed for GPU)
             pDebugController1->SetEnableGPUBasedValidation(pConfig->GPUValidationEnabled); // GPU validation
         }
@@ -132,6 +140,33 @@ namespace cauldron
         // Init the device
         InitDevice();
 
+        if (validationEnabled)
+        {
+            MSComPtr<ID3D12InfoQueue> infoQueue;
+            if (SUCCEEDED(m_pDevice->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+            {
+                // Create a filter to allow only warnings and errors
+                D3D12_INFO_QUEUE_FILTER filter = {};
+                D3D12_MESSAGE_SEVERITY severities[] = {
+                    D3D12_MESSAGE_SEVERITY_ERROR,
+                    D3D12_MESSAGE_SEVERITY_WARNING
+                };
+
+                filter.AllowList.NumSeverities = _countof(severities);
+                filter.AllowList.pSeverityList = severities;
+
+                /*D3D12_MESSAGE_ID denyIds[] = {
+                    D3D12_MESSAGE_ID_CREATERESOURCE_STATE_IGNORED,
+				};
+				filter.DenyList.NumIDs = _countof(denyIds);
+				filter.DenyList.pIDList = denyIds;*/
+                // Apply the filter
+                infoQueue->PushStorageFilter(&filter);
+
+                // Break on severe messages by default
+                infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+            }
+        }
         // Set stable power state if requested (only works when Windows Developer Mode is enabled)
         if (pConfig->StablePowerState)
         {
@@ -263,6 +298,28 @@ namespace cauldron
         // Must be released right before releasing D3D12 device.
         m_pD3D12Allocator.Reset();
 
+        // reset command queues
+        auto& graphics = m_QueueSyncPrims[static_cast<int32_t>(CommandQueue::Graphics)];
+        auto& compute = m_QueueSyncPrims[static_cast<int32_t>(CommandQueue::Compute)];
+        auto& copy = m_QueueSyncPrims[static_cast<int32_t>(CommandQueue::Copy)];
+
+        graphics.m_pQueue.Reset();
+        compute.m_pQueue.Reset();
+        copy.m_pQueue.Reset();
+
+        graphics.m_pQueueFence.Reset();
+        compute.m_pQueueFence.Reset();
+        copy.m_pQueueFence.Reset();
+
+        auto device = GetDevice()->GetImpl()->DX12Device();
+        ID3D12DebugDevice* debugInterface;
+        if (SUCCEEDED(device->QueryInterface(&debugInterface)))
+        {
+            // D3D12 resources: debugInterface and g_Device are the only live references now. 
+            debugInterface->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
+            debugInterface->Release();
+        }
+
         // Release device
         if (m_pAGSContext)
         {
@@ -341,15 +398,21 @@ namespace cauldron
             }
         }
 
-        HRESULT hrCode = S_OK;
-        if (pSwapChain->GetImpl()->m_VSyncEnabled)
-            hrCode = pSwapChain->GetImpl()->m_pSwapChain->Present(1, 0);
-        else
-            hrCode = pSwapChain->GetImpl()->m_pSwapChain->Present(0, pSwapChain->GetImpl()->m_TearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0);
+        {
+            // Acquire lock only if the proxy swapchain present operation uses the FG callback to dispatch frame generation.
+            const bool bPresentWillDispatchFG = cauldron::GetFramework()->IsFrameGenerationSwapchain() && cauldron::GetFramework()->FrameInterpolationEnabled() && cauldron::GetFramework()->IsSwapchainUsingFrameGenerationCallback();
+            cauldron::FGContextScopeLock fgLock(bPresentWillDispatchFG);
+            
+            HRESULT hrCode = S_OK;
+            if (pSwapChain->GetImpl()->m_VSyncEnabled)
+                hrCode = pSwapChain->GetImpl()->m_pSwapChain->Present(1, 0);
+            else
+                hrCode = pSwapChain->GetImpl()->m_pSwapChain->Present(0, pSwapChain->GetImpl()->m_TearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0);
 
-        if ((hrCode == DXGI_ERROR_DEVICE_REMOVED || hrCode == DXGI_ERROR_DEVICE_RESET || hrCode == DXGI_ERROR_DEVICE_HUNG) && m_DeviceRemovedCallback)
-            m_DeviceRemovedCallback(m_DeviceRemovedCustomData);
-        CauldronThrowOnFail(hrCode);
+            if ((hrCode == DXGI_ERROR_DEVICE_REMOVED || hrCode == DXGI_ERROR_DEVICE_RESET || hrCode == DXGI_ERROR_DEVICE_HUNG) && m_DeviceRemovedCallback)
+                m_DeviceRemovedCallback(m_DeviceRemovedCustomData);
+            CauldronThrowOnFail(hrCode);
+        }
 
         uint32_t queueID = static_cast<uint32_t>(pSwapChain->GetImpl()->m_CreationQueue);
         uint64_t signalValue;

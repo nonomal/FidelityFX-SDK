@@ -22,10 +22,10 @@
 
 #pragma once
 
-#include "../../shaders/surfacerendercommon.h"
+#include "../../framework/shaders/surfacerendercommon.h"
 
-#include "../../core/contentmanager.h"
-#include "../../render/rendermodule.h"
+#include "../../framework/core/contentmanager.h"
+#include "../../framework/render/rendermodule.h"
 
 #include <memory>
 #include <mutex>

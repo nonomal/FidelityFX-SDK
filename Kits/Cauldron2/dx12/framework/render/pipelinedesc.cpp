@@ -27,23 +27,36 @@
 #include "../core/framework.h"
 #include "../misc/assert.h"
 
+// std::exchange
+#include <utility>
+
 namespace cauldron
 {
-    // Move operators
+    PipelineDesc::PipelineDesc(PipelineDesc&& right) noexcept
+        : m_ShaderDescriptions(std::exchange(right.m_ShaderDescriptions, {}))
+        , m_ShaderBlobDescriptions(std::exchange(right.m_ShaderBlobDescriptions, {}))
+        , m_IsWave64(std::exchange(right.m_IsWave64, {}))
+        , m_PipelineType(std::exchange(right.m_PipelineType, {}))
+        , m_PipelineImpl(std::exchange(right.m_PipelineImpl, {}))
+    {}
+    
     PipelineDesc& PipelineDesc::operator=(PipelineDesc&& right) noexcept
     {
-        m_ShaderDescriptions = right.m_ShaderDescriptions;
-        m_ShaderBlobDescriptions = right.m_ShaderBlobDescriptions;
+        DeleteImpl();
+        
+        m_ShaderDescriptions     = std::exchange(right.m_ShaderDescriptions, {});
+        m_ShaderBlobDescriptions = std::exchange(right.m_ShaderBlobDescriptions, {});
+        m_IsWave64               = std::exchange(right.m_IsWave64, {});
+        m_PipelineType           = std::exchange(right.m_PipelineType, {});
+        m_PipelineImpl           = std::exchange(right.m_PipelineImpl, {});
 
-        m_PipelineType = right.m_PipelineType;
-        m_PipelineImpl = right.m_PipelineImpl;
-        right.m_PipelineImpl = nullptr; // Prevent multiple deletes
         return *this;
     }
 
-    PipelineDesc& PipelineDesc::operator=(const PipelineDesc&& right) noexcept
+    PipelineDesc::~PipelineDesc()
     {
-        return this->operator=(const_cast<PipelineDesc&&>(right));
+        // Delete allocated impl memory as it's no longer needed
+        DeleteImpl();
     }
 
     void PipelineDesc::AddShaderDesc(ShaderBuildDesc& shaderDesc)
@@ -63,13 +76,13 @@ namespace cauldron
         static bool s_InvertedDepth = GetConfig()->InvertedDepth;
         if (s_InvertedDepth)
         {
-            shaderDesc.Defines.insert(std::make_pair(L"FAR_DEPTH", L"0.0"));
-            shaderDesc.Defines.insert(std::make_pair(L"NEAR_DEPTH", L"1.0"));
+            shaderDesc.Defines.emplace(L"FAR_DEPTH", L"0.0");
+            shaderDesc.Defines.emplace(L"NEAR_DEPTH", L"1.0");
         }
         else
         {
-            shaderDesc.Defines.insert(std::make_pair(L"FAR_DEPTH", L"1.0"));
-            shaderDesc.Defines.insert(std::make_pair(L"NEAR_DEPTH", L"0.0"));
+            shaderDesc.Defines.emplace(L"FAR_DEPTH", L"1.0");
+            shaderDesc.Defines.emplace(L"NEAR_DEPTH", L"0.0");
         }
 
         m_ShaderDescriptions.push_back(shaderDesc);
@@ -95,7 +108,7 @@ namespace cauldron
         m_ShaderBlobDescriptions.push_back(shaderBlobDesc);
     }
 
-    void PipelineDesc::AddRasterFormats(const ResourceFormat& rtFormat, const ResourceFormat depthFormat /*= ResourceFormat::Unknown*/)
+    void PipelineDesc::AddRasterFormats(ResourceFormat rtFormat, const ResourceFormat depthFormat /*= ResourceFormat::Unknown*/)
     {
         CauldronAssert(ASSERT_CRITICAL, rtFormat != ResourceFormat::Unknown || depthFormat != ResourceFormat::Unknown, L"There are no formats to pass to the pipeline description.");
         AddRenderTargetFormats(1, &rtFormat, depthFormat);

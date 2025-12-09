@@ -42,7 +42,7 @@
 #include <shellscalingapi.h>
 
 // Needed to process windows input by ImGui
-#include "../../libs/imgui/backends/imgui_impl_win32.h"
+#include "../../../../../OpenSource/imgui/backends/imgui_impl_win32.h"
 
 // Needs to be declared outside of the cauldron namespace or it won't resolve properly
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -64,13 +64,11 @@ namespace cauldron
         // Set ImGui style
         ImGui::StyleColorsDark();
 
-        // Init windows/graphics back end for rendering with ImGui
-        ImGuiIO& io = ImGui::GetIO();
-        CauldronAssert(ASSERT_CRITICAL, io.ImeWindowHandle == 0 && io.BackendRendererUserData == nullptr && io.BackendPlatformUserData == nullptr, L"Already initialized a platform or rendering back end!");
-
         // On windows, we will use the win32 backend as it requires hijacking input and a few other things.
         // However, we will not use the rendering backend and elect to have a cauldron specific back end for rendering
         ImGui_ImplWin32_Init(GetFramework()->GetImpl()->GetHWND());
+
+        ImGuiIO& io = ImGui::GetIO();
 
         // If in development mode, disabe the ini file (as it's really annoying when working on UI development)
         if (GetConfig()->DeveloperMode)
@@ -133,24 +131,23 @@ namespace cauldron
         unsigned char* pixels;
         int width, height;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-        MemTextureDataBlock* pDataBlock = new MemTextureDataBlock(reinterpret_cast<char*>(pixels));
 
         // Create the font texture
         TextureDesc fontDesc = TextureDesc::Tex2D(L"UIFontTexture", ResourceFormat::RGBA8_UNORM, width, height, 1, 1);
-        m_pFontTexture = GetDynamicResourcePool()->CreateTexture(&fontDesc, ResourceState::CopyDest);
+        m_pFontTexture = GetDynamicResourcePool()->CreateTexture(&fontDesc, ResourceState::CommonResource);
         CauldronAssert(ASSERT_ERROR, m_pFontTexture, L"Could not create the font texture for UI");
 
         if (m_pFontTexture)
         {
+            MemTextureDataBlock dataBlock{ reinterpret_cast<char*>(pixels) };
+
             // Explicitly cast away const during data copy
-            const_cast<Texture*>(m_pFontTexture)->CopyData(pDataBlock);
+            const_cast<Texture*>(m_pFontTexture)->CopyData(&dataBlock);
 
             // Once done, auto-enqueue a barrier for start of next frame so it's usable
-            Barrier textureTransition = Barrier::Transition(m_pFontTexture->GetResource(), ResourceState::CopyDest, ResourceState::PixelShaderResource | ResourceState::NonPixelShaderResource);
+            Barrier textureTransition = Barrier::Transition(m_pFontTexture->GetResource(), ResourceState::CommonResource, ResourceState::PixelShaderResource | ResourceState::NonPixelShaderResource);
             GetDevice()->ExecuteResourceTransitionImmediate(1, &textureTransition);
         }
-
-        delete pDataBlock;
     }
 
     void UIBackendInternal::UIFontLoadComplete()
@@ -513,7 +510,7 @@ namespace cauldron
                             break;
                         }
                     }
-                    ImGui::PlotLines("", s_GPUFrameTimes, c_NumFrames, 0, "GPU frame time (us)", 0.0f, s_FrameTimeGraphMaxGPUValues[frameTimeGraphMaxValue], ImVec2(0, 40));
+                    ImGui::PlotLines("##Plotline", s_GPUFrameTimes, c_NumFrames, 0, "GPU frame time (us)", 0.0f, s_FrameTimeGraphMaxGPUValues[frameTimeGraphMaxValue], ImVec2(0, 40));
 
                     // Display frame time separately as it's recorded over multiple cmd lists and can't be done together in VK
                     {
@@ -623,22 +620,22 @@ namespace cauldron
             int32_t borderSize = (std::min)(1, static_cast<int32_t>(2 * uiscale.getX()));
 
             // Add ability to filter messages
-            sprintf_s(filterText, 50, "%d Traces", levelCountArray[0]);
+            sprintf_s(filterText, 50, "%u Traces", levelCountArray[0]);
             OutputFilterButton(filterText, 0, borderSize);
 
-            sprintf_s(filterText, 50, "%d Debug", levelCountArray[1]);
+            sprintf_s(filterText, 50, "%u Debug", levelCountArray[1]);
             OutputFilterButton(filterText, 1, borderSize, true);
 
-            sprintf_s(filterText, 50, "%d Info", levelCountArray[2]);
+            sprintf_s(filterText, 50, "%u Info", levelCountArray[2]);
             OutputFilterButton(filterText, 2, borderSize, true);
 
-            sprintf_s(filterText, 50, "%d Warnings", levelCountArray[3]);
+            sprintf_s(filterText, 50, "%u Warnings", levelCountArray[3]);
             OutputFilterButton(filterText, 3, borderSize, true);
 
-            sprintf_s(filterText, 50, "%d Errors", levelCountArray[4]);
+            sprintf_s(filterText, 50, "%u Errors", levelCountArray[4]);
             OutputFilterButton(filterText, 4, borderSize, true);
 
-            sprintf_s(filterText, 50, "%d Fatals", levelCountArray[5]);
+            sprintf_s(filterText, 50, "%u Fatals", levelCountArray[5]);
             OutputFilterButton(filterText, 5, borderSize, true);
 
             ImGui::SameLine();
@@ -650,7 +647,7 @@ namespace cauldron
 
             // Reserve enough left-over height for 1 separator + 1 input text
             const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing() / 2.f;
-            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), false, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), 0, ImGuiWindowFlags_HorizontalScrollbar);
 
             // Gather up the messages to print based on filters
             int32_t msgMask = 0;

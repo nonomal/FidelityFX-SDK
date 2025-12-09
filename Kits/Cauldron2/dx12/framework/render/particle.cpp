@@ -160,7 +160,7 @@ namespace cauldron
 
         // Initialize the random numbers texture
         TextureDesc textureDesc = TextureDesc::Tex2D(std::wstring(m_Name + L"_RadomTexture").c_str(), ResourceFormat::RGBA32_FLOAT, 1024, 1024, 1, 1);
-        m_pRandomTexture        = GetDynamicResourcePool()->CreateTexture(&textureDesc, ResourceState::CopyDest);
+        m_pRandomTexture        = GetDynamicResourcePool()->CreateTexture(&textureDesc, ResourceState::CommonResource);
 
         if (m_pRandomTexture)
         {
@@ -174,12 +174,14 @@ namespace cauldron
                 ptr[3] = RandomVariance(0.0f, 1.0f);
                 ptr += 4;
             }
-            MemTextureDataBlock* pDataBlock = new MemTextureDataBlock(reinterpret_cast<char*>(values));
+
+            MemTextureDataBlock dataBlock{ reinterpret_cast<char*>(values) };
+
             // Explicitly cast away const during data copy
-            const_cast<Texture*>(m_pRandomTexture)->CopyData(pDataBlock);
+            const_cast<Texture*>(m_pRandomTexture)->CopyData(&dataBlock);
             // Once done, auto-enqueue a barrier for start of next frame so it's usable
             Barrier bufferTransition = Barrier::Transition(
-                m_pRandomTexture->GetResource(), ResourceState::CopyDest, ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource);
+                m_pRandomTexture->GetResource(), ResourceState::CommonResource, ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource);
             GetDevice()->ExecuteResourceTransitionImmediate(1, &bufferTransition);
             delete[] values;
         }

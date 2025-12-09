@@ -55,7 +55,7 @@ namespace cauldron
 
     private:
         friend class TaskManager;
-        Task() {};
+        Task() = default;
     };
 
     /**

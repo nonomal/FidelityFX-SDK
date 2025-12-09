@@ -483,7 +483,7 @@ namespace cauldron
         /**
          * @brief   Get the min ranger in slider.
          */
-        inline void GetMin() const noexcept
+        inline T GetMin() const noexcept
         {
             return m_MinValue;
         }
@@ -503,7 +503,7 @@ namespace cauldron
         /**
          * @brief   Get the max ranger in slider.
          */
-        inline void GetMax() const noexcept
+        inline T GetMax() const noexcept
         {
             return m_MaxValue;
         }

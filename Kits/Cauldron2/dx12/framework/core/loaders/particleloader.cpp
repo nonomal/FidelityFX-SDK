@@ -78,7 +78,7 @@ namespace cauldron
             pEntityDataBlock->Components.push_back(pComponent);
 
             // Add the atlas that we need to load for this spawner
-            texLoadInfo.push_back(TextureLoadInfo(spawnerDesc.AtlasPath));
+            texLoadInfo.emplace_back(spawnerDesc.AtlasPath);
         }
 
         // No longer need the load data

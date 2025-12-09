@@ -49,7 +49,9 @@ namespace cauldron
          * @brief   PipelineObject instance creation function. Implemented per api/platform to return the correct
          *          internal resource type.
          */
-        static PipelineObject* CreatePipelineObject(const wchar_t* pipelineObjectName, const PipelineDesc& Desc, std::vector<const wchar_t*>* pAdditionalParameters = nullptr);
+        static PipelineObject* CreatePipelineObject(const wchar_t* pipelineObjectName, PipelineDesc&& desc, std::vector<const wchar_t*>* pAdditionalParameters = nullptr);
+        // To deprecate:
+        static PipelineObject* CreatePipelineObject(const wchar_t* pipelineObjectName, PipelineDesc& desc, std::vector<const wchar_t*>* pAdditionalParameters = nullptr);
 
         /**
          * @brief   Destruction with default behavior.
@@ -82,7 +84,7 @@ namespace cauldron
         NO_COPY(PipelineObject)
         NO_MOVE(PipelineObject)
 
-        virtual void Build(const PipelineDesc& desc, std::vector<const wchar_t*>* pAdditionalParameters) = 0;
+        virtual void Build(PipelineDesc&& desc, std::vector<const wchar_t*>* pAdditionalParameters) = 0;
 
     protected:
         PipelineObject(const wchar_t* pipelineObjectName) : m_Name(pipelineObjectName) {}

@@ -118,24 +118,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="framework\libs\memoryallocator\D3D12MemAlloc.cpp">
-      <Filter>Source Files\MemoryAllocator</Filter>
-    </ClCompile>
-    <ClCompile Include="framework\libs\imgui\imgui.cpp">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="framework\libs\imgui\imgui_demo.cpp">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="framework\libs\imgui\imgui_draw.cpp">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="framework\libs\imgui\imgui_tables.cpp">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="framework\libs\imgui\imgui_widgets.cpp">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClCompile>
     <ClCompile Include="rendermodules\rendermoduleregistry.cpp">
       <Filter>Source Files\Rendermodules</Filter>
     </ClCompile>
@@ -397,35 +379,29 @@
     <ClCompile Include="framework\render\rendermodules\fpslimiter\fpslimiterrendermodule.cpp">
       <Filter>Source Files\Framework\Render\Rendermodules</Filter>
     </ClCompile>
-    <ClCompile Include="framework\libs\imgui\backends\imgui_impl_win32.cpp">
+    <ClCompile Include="..\..\OpenSource\imgui\backends\imgui_impl_win32.cpp">
       <Filter>Source Files\ImGUI\backends</Filter>
     </ClCompile>
-    <ClCompile Include="framework\core\backend_implementations\backend_interface_dx12.cpp">
-      <Filter>Source Files\Framework\Core</Filter>
+    <ClCompile Include="..\..\OpenSource\imgui\imgui.cpp">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_demo.cpp">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_draw.cpp">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_tables.cpp">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\OpenSource\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\OpenSource\amd\memoryallocator\D3D12MemAlloc.cpp">
+      <Filter>Source Files\MemoryAllocator</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework\libs\memoryallocator\D3D12MemAlloc.h">
-      <Filter>Source Files\MemoryAllocator</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\libs\imgui\imconfig.h">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\libs\imgui\imgui.h">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\libs\imgui\imgui_internal.h">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\libs\imgui\imstb_rectpack.h">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\libs\imgui\imstb_textedit.h">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\libs\imgui\imstb_truetype.h">
-      <Filter>Source Files\ImGUI</Filter>
-    </ClInclude>
     <ClInclude Include="rendermodules\rendermoduleregistry.h">
       <Filter>Source Files\Rendermodules</Filter>
     </ClInclude>
@@ -744,9 +720,6 @@
     <ClInclude Include="framework\render\rendermodules\fpslimiter\fpslimiterrendermodule.h">
       <Filter>Source Files\Framework\Render\Rendermodules</Filter>
     </ClInclude>
-    <ClInclude Include="framework\libs\imgui\backends\imgui_impl_win32.h">
-      <Filter>Source Files\ImGUI\backends</Filter>
-    </ClInclude>
     <ClInclude Include="framework\shaders\fidelityfx\ffx_common_types.h">
       <Filter>Source Files\Framework\Shaders\fidelityfx</Filter>
     </ClInclude>
@@ -780,8 +753,29 @@
     <ClInclude Include="framework\core\backend_interface.h">
       <Filter>Source Files\Framework\Core</Filter>
     </ClInclude>
-    <ClInclude Include="framework\core\backend_implementations\backend_interface_dx12.h">
-      <Filter>Source Files\Framework\Core</Filter>
+    <ClInclude Include="..\..\OpenSource\imgui\backends\imgui_impl_win32.h">
+      <Filter>Source Files\ImGUI\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OpenSource\imgui\imconfig.h">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OpenSource\imgui\imgui.h">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OpenSource\imgui\imgui_internal.h">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OpenSource\imgui\imstb_rectpack.h">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OpenSource\imgui\imstb_textedit.h">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OpenSource\imgui\imstb_truetype.h">
+      <Filter>Source Files\ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OpenSource\amd\memoryallocator\D3D12MemAlloc.h">
+      <Filter>Source Files\MemoryAllocator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

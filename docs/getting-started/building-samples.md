@@ -1,10 +1,10 @@
-<!-- @page page_building-samples_index Generating solutions for the FidelityFX SDK -->
+<!-- @page page_building-samples_index Generating solutions for the FSR™ SDK -->
 
-<h1>Building FidelityFX SDK Samples</h1>
+<h1>Building FSR™ SDK Samples</h1>
 
-<h2>Visual Studio solutions for the FidelityFX SDK</h2>
+<h2>Visual Studio solutions for the FSR™ SDK</h2>
 
-To build the samples in the AMD FidelityFX SDK:
+To build the samples in the AMD FSR™ SDK:
 
  1. Download and install the following software developer tool minimum versions:
     - [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Install ```vcpkg package manager``` as part of the install process)
@@ -27,7 +27,7 @@ To build the samples in the AMD FidelityFX SDK:
 
 <h3>Building the project</h3>
 
-The Visual Studio solution file (.sln) will contain all projects needed to build the effect sample. To build the projects in the solution, you should click on ``Build`` and then ``Build solution`` from the menu at the top of Visual Studio. This will build all dependencies of the sample (such as the FidelityFX Cauldron Framework), then build the sample application.
+The Visual Studio solution file (.sln) will contain all projects needed to build the effect sample. To build the projects in the solution, you should click on ``Build`` and then ``Build solution`` from the menu at the top of Visual Studio. This will build all dependencies of the sample (such as the Cauldron Framework), then build the sample application.
 
 <h3>Running the project</h3>
 

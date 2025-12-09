@@ -36,9 +36,9 @@
 
 
 #define FFX_CPU
-#include "../../../../../FidelityFX/upscalers/fsr3/include/ffx_spd.h"
-#include "../../../../../FidelityFX/api/internal/gpu/ffx_core.h"
-#include "../../../../../FidelityFX/upscalers/fsr3/include/gpu/spd/ffx_spd.h"
+#include "../../../../../../FidelityFX/upscalers/fsr3/include/ffx_spd.h"
+#include "../../../../../../FidelityFX/api/internal/gpu/ffx_core.h"
+#include "../../../../../../FidelityFX/upscalers/fsr3/include/gpu/spd/ffx_spd.h"
 
 using namespace cauldron;
 
@@ -126,7 +126,7 @@ void ToneMappingRenderModule::Init(const json& InitData)
     std::wstring shaderPath = L"autoexposure.hlsl";
     DefineList   exposureDefineList;
 
-    exposureDefineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(256)));
+    exposureDefineList.emplace(L"NUM_THREAD_X", std::to_wstring(256));
     ShaderBuildDesc computeDesc = ShaderBuildDesc::Compute(shaderPath.c_str(), L"MainCS", ShaderModel::SM6_0, &exposureDefineList);
     autoExposurePsoDesc.AddShaderDesc(computeDesc);
 
@@ -157,8 +157,8 @@ void ToneMappingRenderModule::Init(const json& InitData)
         shaderPath = L"builddistortionfield.hlsl";
 
         DefineList buildDistortionFieldDefineList;
-        buildDistortionFieldDefineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
-        buildDistortionFieldDefineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
+        buildDistortionFieldDefineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
+        buildDistortionFieldDefineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
         ShaderBuildDesc computeDesc = ShaderBuildDesc::Compute(shaderPath.c_str(), L"MainCS", ShaderModel::SM6_0, &buildDistortionFieldDefineList);
         buildDistortionFieldPsoDesc.AddShaderDesc(computeDesc);
 
@@ -185,8 +185,8 @@ void ToneMappingRenderModule::Init(const json& InitData)
     shaderPath = L"tonemapping.hlsl";
 
     DefineList tonemapperDefineList;
-    tonemapperDefineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
-    tonemapperDefineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
+    tonemapperDefineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
+    tonemapperDefineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
     computeDesc = ShaderBuildDesc::Compute(shaderPath.c_str(), L"MainCS", ShaderModel::SM6_0, &tonemapperDefineList);
     tonemapperPsoDesc.AddShaderDesc(computeDesc);
 

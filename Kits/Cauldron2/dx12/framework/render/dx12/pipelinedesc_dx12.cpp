@@ -228,7 +228,7 @@ namespace cauldron
         m_PipelineImpl->m_ComputePipelineDesc = {};
     }
 
-    PipelineDesc::~PipelineDesc()
+    void PipelineDesc::DeleteImpl() noexcept
     {
         // Delete allocated impl memory as it's no longer needed
         delete m_PipelineImpl;
@@ -246,8 +246,8 @@ namespace cauldron
         for (size_t i = 0; i < m_ShaderDescriptions.size(); ++i)
         {
             // Add defines for the platform
-            m_ShaderDescriptions[i].Defines[L"_DX12"] = L"";
-            m_ShaderDescriptions[i].Defines[L"_HLSL"] = L"";
+            m_ShaderDescriptions[i].Defines[L"_DX12"].clear();
+            m_ShaderDescriptions[i].Defines[L"_HLSL"].clear();
 
             // Compile the shader
             MSComPtr<IDxcBlob> pShaderBlob;
@@ -280,6 +280,7 @@ namespace cauldron
             case ShaderStage::Hull:
                 m_PipelineImpl->m_GraphicsPipelineDesc.HS.BytecodeLength = pShaderBlob->GetBufferSize();
                 m_PipelineImpl->m_GraphicsPipelineDesc.HS.pShaderBytecode = pShaderBlob->GetBufferPointer();
+                break;
             default:
                 CauldronCritical(L"Invalid shader stage requested");
                 break;

@@ -191,11 +191,11 @@ void SkyDomeRenderModule::InitProcedural()
         psoDesc.SetRootSignature(m_pRootSignatureSkyDomeGeneration);
 
         DefineList defineList;
-        defineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
-        defineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
-        defineList.insert(std::make_pair(L"ENVIRONMENT_CUBE", L""));
-        defineList.insert(std::make_pair(L"ENVIRONMENT_CUBE_X", std::to_wstring(g_EnvironmentCubeX)));
-        defineList.insert(std::make_pair(L"ENVIRONMENT_CUBE_Y", std::to_wstring(g_EnvironmentCubeY)));
+        defineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
+        defineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
+        defineList.emplace(L"ENVIRONMENT_CUBE", L"");
+        defineList.emplace(L"ENVIRONMENT_CUBE_X", std::to_wstring(g_EnvironmentCubeX));
+        defineList.emplace(L"ENVIRONMENT_CUBE_Y", std::to_wstring(g_EnvironmentCubeY));
 
         // Setup the shaders to build on the pipeline object
         std::wstring ShaderPath = L"skydomeproc.hlsl";
@@ -233,11 +233,11 @@ void SkyDomeRenderModule::InitProcedural()
         psoDesc.SetRootSignature(m_pRootSignatureSkyDomeGeneration);
 
         DefineList defineList;
-        defineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
-        defineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
-        defineList.insert(std::make_pair(L"IRRADIANCE_CUBE", L""));
-        defineList.insert(std::make_pair(L"IRRADIANCE_CUBE_X", std::to_wstring(g_IrradianceCubeX)));
-        defineList.insert(std::make_pair(L"IRRADIANCE_CUBE_Y", std::to_wstring(g_IrradianceCubeY)));
+        defineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
+        defineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
+        defineList.emplace(L"IRRADIANCE_CUBE", L"");
+        defineList.emplace(L"IRRADIANCE_CUBE_X", std::to_wstring(g_IrradianceCubeX));
+        defineList.emplace(L"IRRADIANCE_CUBE_Y", std::to_wstring(g_IrradianceCubeY));
 
         // Setup the shaders to build on the pipeline object
         std::wstring ShaderPath = L"skydomeproc.hlsl";
@@ -295,12 +295,12 @@ void SkyDomeRenderModule::InitProcedural()
             psoDesc.SetRootSignature(m_pRootSignatureSkyDomeGeneration);
 
             DefineList defineList;
-            defineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
-            defineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
-            defineList.insert(std::make_pair(L"PREFILTERED_CUBE", L""));
-            defineList.insert(std::make_pair(L"MIP_WIDTH", std::to_wstring(mip_width)));
-            defineList.insert(std::make_pair(L"MIP_HEIGHT", std::to_wstring(mip_height)));
-            defineList.insert(std::make_pair(L"SAMPLE_COUNT", std::to_wstring(32)));
+            defineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
+            defineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
+            defineList.emplace(L"PREFILTERED_CUBE", L"");
+            defineList.emplace(L"MIP_WIDTH", std::to_wstring(mip_width));
+            defineList.emplace(L"MIP_HEIGHT", std::to_wstring(mip_height));
+            defineList.emplace(L"SAMPLE_COUNT", std::to_wstring(32));
 
             // Setup the shaders to build on the pipeline object
             std::wstring ShaderPath = L"skydomeproc.hlsl";
@@ -421,7 +421,7 @@ void SkyDomeRenderModule::InitSampleDirections()
     {
         BufferDesc bufferDescSampleDirections =
             BufferDesc::Data(std::wstring(L"SampleDirections[" + std::to_wstring(mip) + L"]").c_str(), sizeof(Vec4) * g_MaxPrefilterSamples, sizeof(Vec4));
-        m_pSampleDirections[mip] = GetDynamicResourcePool()->CreateBuffer(&bufferDescSampleDirections, ResourceState::CopyDest);
+        m_pSampleDirections[mip] = GetDynamicResourcePool()->CreateBuffer(&bufferDescSampleDirections, ResourceState::CommonResource);
 
         float roughness = (float)mip / (float)(g_PrefilterMipLevels - 1);
 
@@ -448,9 +448,6 @@ void SkyDomeRenderModule::InitSampleDirections()
         }
 
         const_cast<Buffer*>(m_pSampleDirections[mip])->CopyData(samples.data(), sizeof(Vec4) * samples.size());
-        // Once done, auto-enqueue a barrier for start of next frame so it's usable
-        Barrier bufferTransition = Barrier::Transition(m_pSampleDirections[mip]->GetResource(), ResourceState::CopyDest, ResourceState::CommonResource);
-        GetDevice()->ExecuteResourceTransitionImmediate(1, &bufferTransition);
     }
 }
 

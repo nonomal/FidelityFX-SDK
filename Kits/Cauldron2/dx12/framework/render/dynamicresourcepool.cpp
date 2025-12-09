@@ -123,7 +123,7 @@ namespace cauldron
                     CauldronError(L"DynamicResourcePool: Creating multiple textures with the name %ls, this can cause conflicts if searching for textures by name later.", pDesc->Name.c_str());
             }
         #endif // _DEBUG
-        m_Textures.push_back(std::make_pair(pDesc->Name, pTex));
+        m_Textures.emplace_back(pDesc->Name, pTex);
 
         if (fn != nullptr)
             m_ResizableTextures.push_back(pTex);
@@ -152,7 +152,7 @@ namespace cauldron
                 }
         #endif  // _DEBUG
 
-        m_Textures.push_back(std::make_pair(pDesc->Name, pRT));
+        m_Textures.emplace_back(pDesc->Name, pRT);
 
         if (fn != nullptr)
             m_ResizableTextures.push_back(pRT);
@@ -174,7 +174,7 @@ namespace cauldron
                 }
         #endif  // _DEBUG
 
-        m_Buffers.push_back(std::make_pair(pDesc->Name, pBuf));
+        m_Buffers.emplace_back(pDesc->Name, pBuf);
 
         if (fn != nullptr)
             m_ResizableBuffers.push_back(pBuf);
